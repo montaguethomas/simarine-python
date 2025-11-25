@@ -58,7 +58,7 @@ class SimarineClient:
   def get_system_info(self) -> tuple[int, str]:
     _, payload = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
     fields = protocol.MessageFields(payload)
-    return fields.get(1).value, f"{fields.get(2).int16_hi}.{fields.get(2).int16_lo}"
+    return fields.get(1).uint32, f"{fields.get(2).int16_hi}.{fields.get(2).int16_lo}"
 
   # --------------------------------------
   # Device & Sensor Counts
@@ -157,13 +157,12 @@ class SimarineClient:
     logging.info("UDP listener started")
 
   def stop_udp_listener(self):
-    if not self._udp_thread:
-      raise exceptions.UDPListenerNotRunning("UDP listener is not running")
-    self._udp_stop.set()
-    self._udp_thread.join()
-    self._udp_thread = None
-    self._udp.close()
-    logging.info("UDP listener stopped")
+    if self._udp_thread:
+      self._udp_stop.set()
+      self._udp_thread.join()
+      self._udp_thread = None
+      self._udp.close()
+      logging.info("UDP listener stopped")
 
   # --------------------------------------
   # AUTO DISCOVERY

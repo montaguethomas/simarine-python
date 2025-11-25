@@ -50,6 +50,7 @@ class MessageTransport:
     if self._sock:
       self._sock.close()
       self._sock = None
+      logging.info(f"Closed socket for {self._host}:{self._port}")
 
   # --------------------------------------
   # Context Management
