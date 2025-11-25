@@ -77,6 +77,11 @@ class SimarineClient:
   def _device_info_request_payload(idx: int) -> bytes:
     return bytes([0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
+  def get_device(self, id: int) -> simarinetypes.Device:
+    _, payload = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
+    fields = protocol.MessageFields(payload)
+    return simarinetypes.DeviceFactory.create(fields)
+
   def get_devices(self) -> dict[int, simarinetypes.Device]:
     device_count, _ = self.get_counts()
     logging.info("Device count: %s", device_count)
@@ -84,11 +89,7 @@ class SimarineClient:
     devices = {}
     indices = range(0, device_count + 1)
     for idx in indices:
-      _, payload = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(idx))
-
-      fields = protocol.MessageFields(payload)
-      device = simarinetypes.DeviceFactory.create(fields)
-
+      device = self.get_device(idx)
       devices[idx] = device
       logging.info("Device index=%d id=%s type=%s name=%s", idx, device.id, device.type, device.name)
 
@@ -102,6 +103,11 @@ class SimarineClient:
   def _sensor_info_request_payload(idx: int) -> bytes:
     return bytes([0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
+  def get_sensor(self, id: int) -> simarinetypes.Sensor:
+    _, payload = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
+    fields = protocol.MessageFields(payload)
+    return simarinetypes.SensorFactory.create(fields)
+
   def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
     _, sensor_count = self.get_counts()
     logging.info("Sensor count: %s", sensor_count)
@@ -109,11 +115,7 @@ class SimarineClient:
     sensors = {}
     indices = range(0, sensor_count + 1)
     for idx in indices:
-      _, payload = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(idx))
-
-      fields = protocol.MessageFields(payload)
-      sensor = simarinetypes.SensorFactory.create(fields)
-
+      sensor = self.get_sensor(idx)
       sensors[idx] = sensor
       logging.info("Sensor index=%d id=%s type=%s", idx, sensor.id, sensor.type)
 
