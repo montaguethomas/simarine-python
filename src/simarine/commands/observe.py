@@ -39,26 +39,21 @@ def add_common_observe_args(parser: argparse.ArgumentParser):
   parser.add_argument("--once", action="store_true")
   parser.add_argument("--fields", help="Comma-separated field names or paths (ex: ohms,state_field,fields.18)")
   parser.add_argument("--json", action="store_true", help="Emit diffs as JSON")
-  parser.add_argument(
-    "--include-unchanged", action="store_true", help="Include unchanged fields in output (full state snapshot on every change)"
-  )
+  parser.add_argument("--include-unchanged", action="store_true", help="Include unchanged fields in output")
+  parser.add_argument("--re-hints", action="store_true", help="Enable automatic RE hints for field behavior")
 
 
 def add_observe_device_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
   parser = subparsers.add_parser("device", help="Observe a device by ID")
   parser.add_argument("device_id", type=int)
-
   add_common_observe_args(parser)
-
   parser.set_defaults(func=cmd_observe_device)
 
 
 def add_observe_sensor_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
   parser = subparsers.add_parser("sensor", help="Observe a sensor by ID")
   parser.add_argument("sensor_id", type=int)
-
   add_common_observe_args(parser)
-
   parser.set_defaults(func=cmd_observe_sensor)
 
 
@@ -82,6 +77,7 @@ def cmd_observe_device(args: argparse.Namespace):
       field_filter=field_filter,
       json_mode=args.json,
       include_unchanged=args.include_unchanged,
+      re_hints=args.re_hints,
     )
 
     if args.once:
@@ -106,6 +102,7 @@ def cmd_observe_sensor(args: argparse.Namespace):
       field_filter=field_filter,
       json_mode=args.json,
       include_unchanged=args.include_unchanged,
+      re_hints=args.re_hints,
     )
 
     if args.once:
@@ -126,6 +123,7 @@ class ObjectDiff:
   changes: Dict[str, tuple[Any, Any]]
   unchanged: Dict[str, Any]
   timestamp: float
+  hints: Optional[Dict[str, str]] = None
 
 
 # --------------------------------------------------
@@ -137,7 +135,12 @@ class ObjectObserver:
   """
   Observe changes on a SimarineObject.
 
-  Now filters based on final rendered field key names.
+  Features:
+    - Getter-based polling
+    - Normalized field values
+    - Field name/key filtering
+    - Colorized diffs or JSON output
+    - Optional RE hint generation
   """
 
   def __init__(
@@ -149,6 +152,7 @@ class ObjectObserver:
     field_filter: Optional[Iterable[str]] = None,
     json_mode: bool = False,
     include_unchanged: bool = False,
+    re_hints: bool = False,
   ):
     self.getter = getter
     self.interval = interval
@@ -157,9 +161,10 @@ class ObjectObserver:
     self.field_filter = set(field_filter) if field_filter else None
     self.json_mode = json_mode
     self.include_unchanged = include_unchanged
+    self.re_hints = re_hints
 
-    self._previous_state = None
-    self._previous_obj = None
+    self._previous_state: Optional[Dict[str, Any]] = None
+    self._previous_obj: Optional[SimarineObject] = None
     self._running = False
 
   # -------------------------------
@@ -168,6 +173,9 @@ class ObjectObserver:
 
   @classmethod
   def _normalize_value(cls, value):
+    """
+    Convert nested values to primitives for easier diffing.
+    """
     if isinstance(value, SimarineObject):
       return {k: cls._normalize_value(v) for k, v in value.to_dict().items()}
 
@@ -177,13 +185,10 @@ class ObjectObserver:
         if isinstance(v, MessageFields):
           normalized[str(k)] = cls._normalize_value(v.value)
           continue
-
         if isinstance(k, int):
           normalized[f"fields.{k}"] = cls._normalize_value(v)
           continue
-
         normalized[str(k)] = cls._normalize_value(v)
-
       return normalized
 
     if isinstance(value, list):
@@ -215,17 +220,38 @@ class ObjectObserver:
     obj_type = getattr(obj, "type", None)
 
     parts = [cls_name]
-
     if obj_id is not None:
       parts.append(f"#{obj_id}")
-
     if name:
       parts.append(f'"{name}"')
-
     if obj_type:
       parts.append(f"(type={obj_type})")
 
     return " ".join(parts)
+
+  # -------------------------------
+  # Hint engine
+  # -------------------------------
+
+  def _generate_hints(self, changes: Dict[str, tuple[Any, Any]], unchanged: Dict[str, Any]) -> Dict[str, str]:
+    hints: Dict[str, str] = {}
+
+    for key, (old, new) in changes.items():
+      # simple hint heuristics
+      if isinstance(old, (int, float)) and isinstance(new, (int, float)):
+        delta = new - old
+        if delta == 0:
+          hints[key] = "no change"
+        elif abs(delta) < 5:
+          hints[key] = "small incremental change"
+        elif abs(delta) > 10000:
+          hints[key] = "large jump — maybe counter or timestamp"
+        else:
+          hints[key] = "likely analog measurement"
+      else:
+        hints[key] = "value changed type/flag"
+
+    return hints
 
   # -------------------------------
   # Diff logic
@@ -252,34 +278,16 @@ class ObjectObserver:
     if not changes and not (self.include_unchanged and unchanged):
       return None
 
-    return ObjectDiff(
-      before=before,
-      after=after,
-      changes=changes,
-      unchanged=unchanged,
-      timestamp=time.time(),
-    )
+    hints = self._generate_hints(changes, unchanged) if self.re_hints else None
+
+    return ObjectDiff(before=before, after=after, changes=changes, unchanged=unchanged, timestamp=time.time(), hints=hints)
 
   def _matches_field_filter(self, key: str) -> bool:
-    """
-    Field filter now matches against final display key.
-
-    Matching rules:
-      - exact match: 'ohms'
-      - prefix: 'fields.18'
-      - contains: 'state'
-    """
     key_lower = key.lower()
-
-    for rule in self.field_filter:
-      rule = rule.lower()
-      if rule == key_lower:
+    for rule in self.field_filter or []:
+      rule_lower = rule.lower()
+      if rule_lower == key_lower or key_lower.startswith(rule_lower) or rule_lower in key_lower:
         return True
-      if key_lower.startswith(rule):
-        return True
-      if rule in key_lower:
-        return True
-
     return False
 
   # -------------------------------
@@ -329,26 +337,31 @@ class ObjectObserver:
       for key, value in diff.unchanged.items():
         logging.info("  %-30s %s", key, value)
 
+    if self.re_hints and diff.hints:
+      logging.info("  ---- hints ----")
+      for key, hint in diff.hints.items():
+        logging.info("  %-30s %s", key, hint)
+
   def _emit_json(self, diff: ObjectDiff, obj: SimarineObject):
-    print(
-      json.dumps(
-        {
-          "timestamp": diff.timestamp,
-          "object": {
-            "class": obj.__class__.__name__,
-            "id": getattr(obj, "id", None),
-            "name": getattr(obj, "name", None),
-            "type": str(getattr(obj, "type", None)),
-          },
-          "changed": {key: {"old": old, "new": new} for key, (old, new) in diff.changes.items()},
-          "unchanged": diff.unchanged if self.include_unchanged else {},
-        },
-        separators=(",", ":"),
-      )
-    )
+    data: Dict[str, Any] = {
+      "timestamp": diff.timestamp,
+      "object": {
+        "class": obj.__class__.__name__,
+        "id": getattr(obj, "id", None),
+        "name": getattr(obj, "name", None),
+        "type": str(getattr(obj, "type", None)),
+      },
+      "changed": {key: {"old": old, "new": new} for key, (old, new) in diff.changes.items()},
+      "unchanged": diff.unchanged if self.include_unchanged else {},
+    }
+
+    if self.re_hints and diff.hints:
+      data["hints"] = diff.hints
+
+    print(json.dumps(data, separators=(",", ":")))
 
   # -------------------------------
-  # Loop
+  # Loop control
   # -------------------------------
 
   def run(self, max_samples=None):
