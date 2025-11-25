@@ -1,26 +1,50 @@
-class SimarineProtocolError(Exception):
+class ProtocolError(Exception):
   """Base class for Simarine protocol errors."""
 
 
-class InvalidHeaderLength(SimarineProtocolError):
+class InvalidHeaderLength(ProtocolError):
   pass
 
 
-class InvalidHeaderPrefix(SimarineProtocolError):
+class InvalidHeaderPrefix(ProtocolError):
   pass
 
 
-class InvalidHeaderTerminator(SimarineProtocolError):
+class InvalidHeaderTerminator(ProtocolError):
   pass
 
 
-class MessageTypeMismatch(SimarineProtocolError):
+class MessageTypeMismatch(ProtocolError):
   pass
 
 
-class InvalidPayloadLength(SimarineProtocolError):
+class InvalidPayloadLength(ProtocolError):
   pass
 
 
-class CRCMismatch(SimarineProtocolError):
+class CRCMismatch(ProtocolError):
+  pass
+
+
+class TransportError(Exception):
+  """Base class for Simarine transport errors."""
+
+
+class TransportOpenError(TransportError):
+  pass
+
+
+class TransportAlreadyOpen(TransportError):
+  pass
+
+
+class ClientError(Exception):
+  """Base class for Simarine client errors."""
+
+
+class UDPListenerAlreadyRunning(ClientError):
+  pass
+
+
+class UDPListenerNotRunning(ClientError):
   pass

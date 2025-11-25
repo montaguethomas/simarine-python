@@ -6,13 +6,19 @@ Provides transport, protocol decoding, and object models for devices and sensors
 
 from .client import SimarineClient
 from .exceptions import (
-  SimarineProtocolError,
+  ProtocolError,
   InvalidHeaderLength,
   InvalidHeaderPrefix,
   InvalidHeaderTerminator,
   MessageTypeMismatch,
   InvalidPayloadLength,
   CRCMismatch,
+  TransportError,
+  TransportOpenError,
+  TransportAlreadyOpen,
+  ClientError,
+  UDPListenerAlreadyRunning,
+  UDPListenerNotRunning,
 )
 from .protocol import MessageType, MessageFieldType, MessageFields
 from .transport import DEFAULT_TCP_PORT, DEFAULT_UDP_PORT
@@ -52,13 +58,19 @@ from .types import (
 
 __all__: tuple[str, ...] = [
   "SimarineClient",
-  "SimarineProtocolError",
+  "ProtocolError",
   "InvalidHeaderLength",
   "InvalidHeaderPrefix",
   "InvalidHeaderTerminator",
   "MessageTypeMismatch",
   "InvalidPayloadLength",
   "CRCMismatch",
+  "TransportError",
+  "TransportOpenError",
+  "TransportAlreadyOpen",
+  "ClientError",
+  "UDPListenerAlreadyRunning",
+  "UDPListenerNotRunning",
   "MessageType",
   "MessageFieldType",
   "MessageFields",

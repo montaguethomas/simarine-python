@@ -29,7 +29,7 @@ class CustomEncoder(json.JSONEncoder):
 
 def main():
   ap = argparse.ArgumentParser()
-  ap.add_argument("--host", required=True)
+  ap.add_argument("--host")
   ap.add_argument("--pretty", action="store_true")
   ap.add_argument("--debug", action="store_true")
   ap.add_argument("--interval", type=float, default=5.0)

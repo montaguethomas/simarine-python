@@ -1,31 +1,71 @@
 import logging
-from typing import Dict, Optional
+import threading
+from typing import Callable, Optional
 
-from . import protocol, transport
+from . import exceptions, protocol, transport
 from . import types as simarinetypes
 
 
 class SimarineClient:
   """
-  High-level Pico client built on SimarineTransport.
+  High-level Simarine client built on SimarineTransport.
+
+  Supports:
+    - TCP control
+    - UDP auto discovery & broadcast listening
   """
 
-  def __init__(self, host: str, port: int = transport.DEFAULT_TCP_PORT):
-    self.transport = transport.MessageTransportTCP(host, port)
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    tcp_kwargs: Optional[dict] = None,
+    udp_kwargs: Optional[dict] = None,
+    auto_discover: bool = True,
+  ):
+    tcp_kwargs = tcp_kwargs or {}
+    tcp_kwargs.setdefault("host", host)
+    udp_kwargs = udp_kwargs or {}
+
+    if not tcp_kwargs.get("host") and auto_discover:
+      tcp_kwargs["host"], _, _ = self.discover(udp_kwargs)
+      if not tcp_kwargs.get("host"):
+        raise ValueError("Unable to discover Simarine device via UDP broadcast")
+
+    if not tcp_kwargs.get("host"):
+      raise ValueError("Host must be provided or auto_discover must be True")
+
+    self._tcp = transport.MessageTransportTCP(**tcp_kwargs)
+    self._udp = transport.MessageTransportUDP(**udp_kwargs)
+    self._udp_thread: Optional[threading.Thread] = None
+    self._udp_stop = threading.Event()
+
+  # --------------------------------------
+  # Context Management
+  # --------------------------------------
 
   def __enter__(self):
-    self.transport.connect()
+    self._tcp.open()
     return self
 
   def __exit__(self, exc_type, exc, tb):
-    self.transport.close()
+    self._tcp.close()
+    self.stop_udp_listener()
+
+  # --------------------------------------
+  # System Information
+  # --------------------------------------
+
+  def get_system_info(self) -> tuple[int, str]:
+    _, payload = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
+    fields = protocol.MessageFields(payload)
+    return fields.get(1).value, f"{fields.get(2).int16_hi}.{fields.get(2).int16_lo}"
 
   # --------------------------------------
   # Device & Sensor Counts
   # --------------------------------------
 
-  def get_counts(self) -> tuple[Optional[int], Optional[int]]:
-    payload = self.transport.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
+  def get_counts(self) -> tuple[int, int]:
+    _, payload = self._tcp.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
     fields = protocol.MessageFields(payload)
     return fields.get(1).value, fields.get(2).value
 
@@ -33,18 +73,18 @@ class SimarineClient:
   # Devices
   # --------------------------------------
 
-  @classmethod
-  def _device_info_request_payload(cls, idx: int) -> bytes:
+  @staticmethod
+  def _device_info_request_payload(idx: int) -> bytes:
     return bytes([0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
-  def get_devices(self) -> Dict[int, simarinetypes.Device]:
+  def get_devices(self) -> dict[int, simarinetypes.Device]:
     device_count, _ = self.get_counts()
     logging.info("Device count: %s", device_count)
 
     devices = {}
     indices = range(0, device_count + 1)
     for idx in indices:
-      payload = self.transport.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(idx))
+      _, payload = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(idx))
 
       fields = protocol.MessageFields(payload)
       device = simarinetypes.DeviceFactory.create(fields)
@@ -58,18 +98,18 @@ class SimarineClient:
   # Sensors
   # --------------------------------------
 
-  @classmethod
-  def _sensor_info_request_payload(cls, idx: int) -> bytes:
+  @staticmethod
+  def _sensor_info_request_payload(idx: int) -> bytes:
     return bytes([0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
-  def get_sensors(self) -> Dict[int, simarinetypes.Sensor]:
+  def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
     _, sensor_count = self.get_counts()
     logging.info("Sensor count: %s", sensor_count)
 
     sensors = {}
     indices = range(0, sensor_count + 1)
     for idx in indices:
-      payload = self.transport.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(idx))
+      _, payload = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(idx))
 
       fields = protocol.MessageFields(payload)
       sensor = simarinetypes.SensorFactory.create(fields)
@@ -83,8 +123,79 @@ class SimarineClient:
   # Update Sensors State
   # --------------------------------------
 
-  def update_sensors_state(self, sensors: Dict[int, simarinetypes.Sensor]):
-    payload = self.transport.request(protocol.MessageType.SENSORS_STATE, bytes())
+  def update_sensors_state(self, sensors: dict[int, simarinetypes.Sensor]):
+    _, payload = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
     for field in protocol.MessageFields(payload):
       if field.id in sensors:
         sensors[field.id].state_field = field
+
+  # --------------------------------------
+  # UDP LISTENING
+  # --------------------------------------
+
+  def start_udp_listener(self, handler: Callable[[protocol.MessageType, bytes, tuple[str, int]], None]):
+    """
+    Start background UDP listener.
+
+    handler(msg_type, payload, source_addr)
+    """
+    if self._udp_thread and self._udp_thread.is_alive():
+      raise exceptions.UDPListenerAlreadyRunning("UDP listener already running")
+
+    self._udp_stop.clear()
+    self._udp.open()
+
+    def loop():
+      for msg_type, payload, addr in self._udp.listen(stop_event=self._udp_stop):
+        try:
+          handler(msg_type, payload, addr)
+        except Exception:
+          logging.exception("UDP handler error")
+
+    self._udp_thread = threading.Thread(target=loop, daemon=True, name="simarine-udp-listener")
+    self._udp_thread.start()
+    logging.info("UDP listener started")
+
+  def stop_udp_listener(self):
+    if not self._udp_thread:
+      raise exceptions.UDPListenerNotRunning("UDP listener is not running")
+    self._udp_stop.set()
+    self._udp_thread.join()
+    self._udp_thread = None
+    self._udp.close()
+    logging.info("UDP listener stopped")
+
+  # --------------------------------------
+  # AUTO DISCOVERY
+  # --------------------------------------
+
+  @staticmethod
+  def discover(udp_kwargs: Optional[dict] = None) -> tuple[Optional[str], Optional[int], Optional[str]]:
+    """
+    Listen for Simarine UDP broadcasts and extract system information.
+
+    Returns:
+      (ip, serial_number, firmware_version)
+    """
+    logging.info("Discovering Simarine device...")
+    udp_kwargs = udp_kwargs or {}
+    with transport.MessageTransportUDP(**udp_kwargs) as udp:
+      try:
+        _, _, addr = udp.recv()
+      except TimeoutError:
+        logging.info("Discovery timed out")
+        return None, None, None
+      except Exception:
+        logging.exception("Discovery failed")
+        return None, None, None
+
+    logging.info(f"Found device at {addr[0]}:{addr[1]}, probing system information...")
+    with SimarineClient(addr[0], auto_discover=False) as client:
+      try:
+        serial_number, firmware_version = client.get_system_info()
+      except Exception:
+        logging.exception("Failed to probe system information")
+        return addr[0], None, None
+
+    logging.info(f"Simarine device: ip={addr[0]} serial={serial_number}, firmware={firmware_version}")
+    return addr[0], serial_number, firmware_version
