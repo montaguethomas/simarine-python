@@ -11,7 +11,7 @@ class SimarineClient:
   """
 
   def __init__(self, host: str, port: int = transport.DEFAULT_TCP_PORT):
-    self.transport = transport.MessageTransport(host, port)
+    self.transport = transport.MessageTransportTCP(host, port)
 
   def __enter__(self):
     self.transport.connect()
@@ -34,7 +34,7 @@ class SimarineClient:
   # --------------------------------------
 
   @classmethod
-  def _device_info_request_payload(idx: int) -> bytes:
+  def _device_info_request_payload(cls, idx: int) -> bytes:
     return bytes([0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
   def get_devices(self) -> Dict[int, simarinetypes.Device]:
@@ -59,7 +59,7 @@ class SimarineClient:
   # --------------------------------------
 
   @classmethod
-  def _sensor_info_request_payload(idx: int) -> bytes:
+  def _sensor_info_request_payload(cls, idx: int) -> bytes:
     return bytes([0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
   def get_sensors(self) -> Dict[int, simarinetypes.Sensor]:
