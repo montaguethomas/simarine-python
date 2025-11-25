@@ -1,0 +1,46 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=67.0", "setuptools-scm[toml]>=7.1"]
+
+
+[project]
+name = "simarine"
+description = "Simarine protocol client and parser."
+dependencies = [
+  "crcmod>=1.7.0",
+]
+dynamic = ["version"]
+requires-python = ">=3.12"
+
+authors = [
+  {name = "Thomas Montague", email = "montague.thomas@gmail.com"},
+]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+
+
+[project.scripts]
+simarine = "simarine.cli:main"
+
+
+[project.urls]
+Homepage = "https://github.com/montaguethomas/simarine-python/"
+
+
+[project.optional-dependencies]
+dev = [
+  "setuptools_scm",
+  "pytest",
+  "pytest-cov",
+  "ruff",
+]
+
+
+[tool.ruff]
+indent-width = 2
+line-length = 140
+
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0-dev"
