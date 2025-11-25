@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 
 from .client import SimarineClient
-from .commands.observer import add_observe_subcommand
+from .commands.observe import add_observe_subcommand
 
 
 # --------------------------------------------------
