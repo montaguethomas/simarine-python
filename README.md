@@ -14,7 +14,7 @@ pip install git+https://github.com/montaguethomas/simarine-python.git
 
 A quick example displaying how to import and use the package:
 ````python
-import simarine
+from simarine import SimarineClient
 
 with SimarineClient("192.168.1.1") as client:
   devices = client.get_devices()
