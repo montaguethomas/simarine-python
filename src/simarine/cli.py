@@ -6,14 +6,35 @@ from datetime import datetime
 from enum import Enum
 
 from .client import SimarineClient
+from .commands.observer import add_observe_subcommand
 
 
 # --------------------------------------------------
-# cli / main
+# main
 # --------------------------------------------------
 
 
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--debug", action="store_true")
+  subparsers = parser.add_subparsers(dest="command", help="Available commands", required=True)
+
+  add_observe_subcommand(subparsers)
+  add_run_subcommand(subparsers)
+
+  args = parser.parse_args()
+
+  loglevel = logging.DEBUG if args.debug else logging.INFO
+  logging.basicConfig(level=loglevel, format="%(asctime)s %(levelname)s %(message)s")
+
+  args.func(args)
+
+
+# --------------------------------------------------
 # JSON Encoder
+# --------------------------------------------------
+
+
 class CustomEncoder(json.JSONEncoder):
   def default(self, obj):
     if isinstance(obj, bytes):
@@ -27,17 +48,20 @@ class CustomEncoder(json.JSONEncoder):
     return super().default(obj)
 
 
-def main():
-  ap = argparse.ArgumentParser()
-  ap.add_argument("--host")
-  ap.add_argument("--pretty", action="store_true")
-  ap.add_argument("--debug", action="store_true")
-  ap.add_argument("--interval", type=float, default=5.0)
-  args = ap.parse_args()
+# --------------------------------------------------
+# Commands
+# --------------------------------------------------
 
-  loglevel = logging.DEBUG if args.debug else logging.INFO
-  logging.basicConfig(level=loglevel, format="%(asctime)s %(levelname)s %(message)s")
 
+def add_run_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
+  parser = subparsers.add_parser("run", help="Continuously poll devices and sensors and emit JSON snapshots")
+  parser.add_argument("--host")
+  parser.add_argument("--pretty", action="store_true")
+  parser.add_argument("--interval", type=float, default=5.0)
+  parser.set_defaults(func=cmd_run)
+
+
+def cmd_run(args: argparse.Namespace):
   with SimarineClient(args.host) as client:
     devices = client.get_devices()
     sensors = client.get_sensors()
