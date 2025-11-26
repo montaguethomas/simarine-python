@@ -18,7 +18,7 @@ class MessageTypeMismatch(ProtocolError):
   pass
 
 
-class InvalidPayloadLength(ProtocolError):
+class InvalidMessageLength(ProtocolError):
   pass
 
 

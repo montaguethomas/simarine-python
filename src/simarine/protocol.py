@@ -32,8 +32,8 @@ class MessageType(IntEnum):
 
   Response:
     0000000000 ff 01 84b3ee93 0011
-    ff 01 01 84b3ee93   -> Serial Number (uint32: 84B3EE93)
-    ff 02 01 00010015   -> Firmware Version (int16.int16: 0001.0015)
+    ff 01 01 84b3ee93   -> Serial Number ( uint32(84b3ee93) = 2226384531)
+    ff 02 01 00010015   -> Firmware Version ( int16(0001) . int16(0015) = 1.21)
     ff 97a3
   """
 
@@ -270,10 +270,10 @@ class Message:
   Message Layout:
     0..4      : PREAMBLE
     5         : MARKER(HeaderSection)
-    6         : msg_type(MessageType)
-    7..10     : sys_serial_number(uint32)
-    11..12    : msg_length(uint16)
-    13..N-3   : msg_fields(MessageFields)
+    6         : type(MessageType)
+    7..10     : serial_number(uint32)
+    11..12    : length(uint16)
+    13..N-3   : payload(MessageFields)
     N-2       : MARKER(ChecksumSection)
     N-1..N    : CRC16
   """
@@ -388,7 +388,7 @@ class Message:
     expected_length = len(msg_bytes) - cls.HEADER_SIZE
 
     if expected_length != msg_length:
-      raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
+      raise exceptions.InvalidMessageLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
 
     if msg_bytes[cls.CRC_MARKER_POS] != cls.MARKER_BYTE:
       raise exceptions.InvalidChecksumMarker(f"Invalid checksum marker byte: 0x{msg_bytes[cls.CRC_MARKER_POS]:02X}")
@@ -418,9 +418,10 @@ class Message:
 
 
 class MessageFieldType(IntEnum):
-  INT = 1
-  TIMESTAMPED_INT = 3
-  TIMESTAMPED_TEXT = 4
+  INT = 0x01
+  TIMESTAMPED_INT = 0x03
+  TIMESTAMPED_TEXT = 0x04
+  UNKNOWN_0B = 0x0B  # found in MessageType.UNKNOWN_C1 messages
 
 
 class MessageFields:
