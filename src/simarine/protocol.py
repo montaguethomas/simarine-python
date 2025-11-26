@@ -264,6 +264,9 @@ class Message:
   #: Total size: 14 bytes.
   HEADER_SIZE = 14
 
+  def __repr__(self):
+    return f"<Message type={self.type.name} sn={self.serial_number} len={self.length} payload_len={len(self.payload)}>"
+
   @classmethod
   def build(cls, msg_type: MessageType, payload: bytes, serial_number: int = None):
     length = len(payload) + 3
