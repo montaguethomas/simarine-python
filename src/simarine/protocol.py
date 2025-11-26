@@ -250,39 +250,49 @@ class Message:
   serial_number: int
   type: MessageType
 
-  _CRC_FUNC = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
-
-  #: Size of the Simarine message header in bytes.
-  #:
-  #: The header precedes every protocol message and contains sync bytes,
-  #: message type, source ID, payload length and terminator marker.
-  #:
-  #: Example header format::
-  #:
-  #:   00 00 00 00 00 FF <type> <source-id:4> <length:2> FF
-  #:
-  #: Total size: 14 bytes.
   HEADER_SIZE = 14
+  """Number of bytes used for message header."""
+
+  PREFIX_BYTES: bytes = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
+  """Static message prefix bytes."""
+
+  PREFIX_SIZE: int = 6
+  """Number of bytes used for message prefix (0x00 * 5 + 0xFF)."""
+
+  TYPE_BYTE_INDEX: int = 6
+  """The index of the message header for where the message type byte is."""
+
+  SERIAL_NUMBER_BYTES_INDEX: tuple[int, int] = (7, 11)
+  """The start and end indexes of the message header for where the system serial number bytes are."""
+
+  LENGTH_BYTES_INDEX: tuple[int, int] = (11, 13)
+  """The start and end indexes of the message header for where the message length bytes are."""
+
+  CRC_SIZE: int = 2
+  """Number of bytes used for message checksum."""
+
+  _CRC_FUNC = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
+  """CRC Calculation Function"""
 
   def __repr__(self):
     return f"<Message type={self.type.name} sn={self.serial_number} len={self.length} payload_len={len(self.payload)}>"
 
   @classmethod
   def build(cls, msg_type: MessageType, payload: bytes, serial_number: int = None):
-    length = len(payload) + 3
-    length_bytes = length.to_bytes(2, "big")
+    length = len(payload) + cls.CRC_SIZE + 1
+    length_bytes = length.to_bytes(2, "big", signed=False)
     serial_number = 0 if serial_number is None else serial_number
-    serial_number_bytes = serial_number.to_bytes(4, "big")
+    serial_number_bytes = serial_number.to_bytes(4, "big", signed=False)
 
-    msg_bytes = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
+    msg_bytes = bytearray(cls.PREFIX_BYTES)
     msg_bytes.append(msg_type.value)
     msg_bytes.extend(serial_number_bytes)
     msg_bytes.extend(length_bytes)
-    msg_bytes.append(0xFF)
+    msg_bytes.append(cls.PREFIX_BYTES[-1])
     msg_bytes.extend(payload)
 
     crc = cls._CRC_FUNC(msg_bytes[1:-1])
-    msg_bytes.extend(crc.to_bytes(2, "big"))
+    msg_bytes.extend(crc.to_bytes(2, "big", signed=False))
 
     return cls(
       bytes=bytes(msg_bytes),
@@ -297,32 +307,32 @@ class Message:
     if len(msg_bytes) < cls.HEADER_SIZE:
       raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE}")
 
-    if msg_bytes[:6] != b"\x00\x00\x00\x00\x00\xff":
+    if msg_bytes[: cls.PREFIX_SIZE] != cls.PREFIX_BYTES:
       raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {msg_bytes[:6].hex()}")
 
-    if msg_bytes[13] != 0xFF:
+    if msg_bytes[cls.HEADER_SIZE - 1] != cls.PREFIX_BYTES[-1]:
       raise exceptions.InvalidHeaderTerminator(f"Invalid header terminator byte: 0x{msg_bytes[13]:02X}")
 
-    msg_type = MessageType(msg_bytes[6])
+    msg_type = MessageType(msg_bytes[cls.TYPE_BYTE_INDEX])
 
     if expected_type and msg_type != expected_type:
       raise exceptions.MessageTypeMismatch(f"Expected {expected_type.name}, got {msg_type.name}")
 
-    msg_serial_number = int.from_bytes(msg_bytes[7:11], "big", signed=False)
+    msg_serial_number = int.from_bytes(msg_bytes[cls.SERIAL_NUMBER_BYTES_INDEX[0] : cls.SERIAL_NUMBER_BYTES_INDEX[1]], "big", signed=False)
 
-    msg_length = int.from_bytes(msg_bytes[11:13], "big", signed=False)
+    msg_length = int.from_bytes(msg_bytes[cls.LENGTH_BYTES_INDEX[0] : cls.LENGTH_BYTES_INDEX[1]], "big", signed=False)
     expected_length = len(msg_bytes) - cls.HEADER_SIZE + 1
 
     if expected_length != msg_length:
       raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
 
-    msg_crc = msg_bytes[-2:]
-    expected_crc = cls._CRC_FUNC(msg_bytes[1:-3]).to_bytes(2, "big")
+    msg_crc = msg_bytes[-cls.CRC_SIZE :]
+    expected_crc = cls._CRC_FUNC(msg_bytes[1:-3]).to_bytes(cls.CRC_SIZE, "big", signed=False)
 
     if expected_crc != msg_crc:
       raise exceptions.CRCMismatch(f"CRC mismatch: expected={expected_crc.hex()}, got={msg_crc.hex()}")
 
-    payload = msg_bytes[cls.HEADER_SIZE : -2]
+    payload = msg_bytes[cls.HEADER_SIZE : -cls.CRC_SIZE]
 
     return cls(
       bytes=msg_bytes,
