@@ -245,7 +245,7 @@ class Message:
   """
 
   bytes: bytes
-  fields: MessageFields
+  fields: "MessageFields"
   length: int
   payload: bytes
   serial_number: int
