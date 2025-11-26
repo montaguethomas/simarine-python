@@ -369,7 +369,7 @@ class Message:
     if len(msg_bytes) < cls.HEADER_SIZE + cls.CRC_SIZE:
       raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE + cls.CRC_SIZE}")
 
-    if msg_bytes[: cls.PPREAMBLE_SIZE] != cls.PREAMBLE_BYTES:
+    if msg_bytes[: cls.PREAMBLE_SIZE] != cls.PREAMBLE_BYTES:
       raise exceptions.InvalidHeaderPreamble(f"Invalid preamble: {msg_bytes[: cls.PREAMBLE_SIZE].hex()}")
 
     if msg_bytes[cls.PREAMBLE_SIZE] != cls.MARKER_BYTE:
