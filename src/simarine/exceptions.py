@@ -6,11 +6,11 @@ class InvalidHeaderLength(ProtocolError):
   pass
 
 
-class InvalidHeaderPrefix(ProtocolError):
+class InvalidHeaderPreamble(ProtocolError):
   pass
 
 
-class InvalidHeaderTerminator(ProtocolError):
+class InvalidHeaderMarker(ProtocolError):
   pass
 
 
@@ -19,6 +19,10 @@ class MessageTypeMismatch(ProtocolError):
 
 
 class InvalidPayloadLength(ProtocolError):
+  pass
+
+
+class InvalidChecksumMarker(ProtocolError):
   pass
 
 

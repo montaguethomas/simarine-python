@@ -5,16 +5,14 @@ requires = ["setuptools>=67.0", "setuptools-scm[toml]>=7.1"]
 
 [project]
 name = "simarine"
-description = "Simarine protocol client and parser."
+description = "A python implementation of the Simarine Pico Message Protocol."
 dependencies = [
   "crcmod>=1.7.0",
 ]
 dynamic = ["version"]
 requires-python = ">=3.12"
 
-authors = [
-  {name = "Thomas Montague", email = "montague.thomas@gmail.com"},
-]
+authors = [{name = "Thomas Montague", email = "montague.thomas@gmail.com"}]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

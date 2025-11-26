@@ -1,6 +1,6 @@
 # Simarine Python Package
 
-Simarine protocol client and parser.
+A python implementation of the Simarine Pico Message Protocol.
 
 Based on the reverse engineering work of https://github.com/htool/pico2signalk.
 

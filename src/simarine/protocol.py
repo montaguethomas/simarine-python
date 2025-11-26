@@ -230,52 +230,30 @@ class MessageType(IntEnum):
     0000000000 ff c1 84b3ee93 0477
     ff 00 0b 691c89f0 ff 691c89f0 <- these are timestamps
     ff e1
-    ff 560b560a ff 560f5611 ff 560e5609 ff 560b560f ff 5611561a
-    ff 56195621 ff 5624562a ff 561e5612 ff 5619561f ff 5614560d
-    ff 5611560c ff 5606560e ff 560b5616 ff 5613560b ff 560555fd
-    ff 55f155ea ff 55db55d4 ff 55d155d4 ff 55ce55d2 ff 55b955a9
-    ff 55a05591 ff 558a5581 ff 556a556c ff 5567556e ff 55695563
-    ff 555d5549 ff 55315525 ff 551e5516 ff 5512550c ff 55075504
-    ff 550054fb ff 54f354f3 ff 54e854e5 ff 54df54ce ff 54be54b1
-    ff 54a854a6 ff 54a0549e ff 5499549f ff 549a5491 ff 54895489
-    ff 54865489 ff 54875477 ff 546c5462 ff 54545449 ff 5443543c
-    ff 54335426 ff 541d5416 ff 5418540f ff 540453f6 ff 53e853dd
-    ff 53ce53c6 ff 53ba53b3 ff 53a85399 ff 53805371 ff 5362535c
-    ff 5355534a ff 533e5333 ff 5322530f ff 52f952dd ff 52d752c5
-    ff 52b952aa ff 52985283 ff 52695258 ff 524d523d ff 522c5221
-    ff 520c51f9 ff 51ec51e0 ff 51c651b1 ff 51a651a4 ff 51a451a6
-    ff 51b251ad ff 51aa51b8 ff 51b351b8 ff 51bd51b7 ff 51b551c7
-    ff 51bd51c2 ff 51b151b6 ff 51af51b2 ff 51b051b8 ff 51b751af
-    ff 51a05194 ff 518f5189 ff 518d5186 ff 5185517c ff 51745165
-    ff 5154514a ff 5134512b ff 511c5109 ff 50ed50dc ff 50d150bc
-    ff 50a95095 ff 50775060 ff 50465036 ff 50215015 ff 5010500d
-    ff 50015000 ff 4ff54fe7 ff 4fdc4fc6 ff 4fae4fa1 ff 4f984f89
-    ff 4f814f85 ff 4f804f74 ff 4f6d4f6a ff 4f684f63 ff 4f5d4f57
-    ff 4f534f4a ff 4f444f42 ff 4f3b4f34 ff 4f314f31 ff 4f284f20
-    ff 4f204f1a ff 4f1a4f1b ff 4f1a4f17 ff 4f0a4efe ff 4efd4efc
-    ff 4ef94ef1 ff 4eee4eef ff 4eed4ee7 ff 4ee74eec ff 4ee84ee9
-    ff 4ee44edf ff 4ece4ecd ff 4ebf4eb3 ff 4ea74e9b ff 4e9d4e93
-    ff 4e874e78 ff 4e694e51 ff 4e3d4e30 ff 4e184dff ff 4de34dc0
-    ff 4da44d8a ff 4d6a4d60 ff 4d504d37 ff 4d1d4d03 ff 4ceb4cdd
-    ff 4cc54cb4 ff 4ca24c93 ff 4c7f4c67 ff 4c654c46 ff 4c2d4c17
-    ff 4bff4bd9 ff 4bce4bd4 ff 4bcf4bbb ff 4bc94bbe ff 4be54be9
-    ff 4be54be6 ff 4bd54bce ff 4bc64bb0 ff 4ba74bb2 ff 4bb54bbe
-    ff 4bbd4bc4 ff 4bbc4bb4 ff 4baa4b8c ff 4b654b72 ff 4b644b66
-    ff 4b574b5a ff 4b4e4b31 ff 4b164b00 ff 4afd4ae4 ff 4ac74ab1
-    ff 4a9d4a84 ff 4a7f4a69 ff 4a5a4a46 ff 4a404a37 ff 4a2d4a2a
-    ff 4a244a18 ff 4a0f49fc ff 49f049f6 ff 49f649f3 ff 49f549eb
-    ff 49dd49c0 ff 499f4994 ff 498d4976 ff 4971496a ff 4979499c
-    ff 49a349a6 ff 49914999 ff 4998499a ff 49a349a2 ff 49bb49d1
-    ff 49e249f1 ff 49f549e8 ff 49fc4a03 ff 4a0b4a23 ff 4a354a59
-    ff 4a624a7c ff 4a894aa0 ff 4abb4ad8 ff 4ae74aec ff 4b024b1f
-    ff 4b504b70 ff 4b994bab ff 4bb24bb0 ff 4bd24bdf ff 4be94c0e
-    ff 4c264c29 ff 4c3d4c62 ff 4c6e4c7b ff 4c904cb9 ff 4ce24cf7
-    ff 4d084d13 ff 4d184d06 ff 4d1e4d36 ff 4d3c4d3d ff 4d4d4d68
-    ff 4d914db0 ff 4dcd4ddf ff 4e0d4e18 ff 4e2d4e37 ff 4e4a4e51
-    ff 4e674e87 ff 4e9e4eaa ff 4ec54ed1 ff 4ed84ee4 ff 4eff4f1f
-    ff 4f394f4c ff 4f6d4f8d ff 4fb54fcc ff 4fd34ffa ff 4ff85026
-    ff 50445056 ff 507f5076 ff 5083509d ff 50a750b0 ff 50cb50e7
-    ff ff 026c
+    ff 560b560a ff 560f5611 ff 560e5609 ff 560b560f ff 5611561a ff 56195621 ff 5624562a ff 561e5612 ff 5619561f ff 5614560d
+    ff 5611560c ff 5606560e ff 560b5616 ff 5613560b ff 560555fd ff 55f155ea ff 55db55d4 ff 55d155d4 ff 55ce55d2 ff 55b955a9
+    ff 55a05591 ff 558a5581 ff 556a556c ff 5567556e ff 55695563 ff 555d5549 ff 55315525 ff 551e5516 ff 5512550c ff 55075504
+    ff 550054fb ff 54f354f3 ff 54e854e5 ff 54df54ce ff 54be54b1 ff 54a854a6 ff 54a0549e ff 5499549f ff 549a5491 ff 54895489
+    ff 54865489 ff 54875477 ff 546c5462 ff 54545449 ff 5443543c ff 54335426 ff 541d5416 ff 5418540f ff 540453f6 ff 53e853dd
+    ff 53ce53c6 ff 53ba53b3 ff 53a85399 ff 53805371 ff 5362535c ff 5355534a ff 533e5333 ff 5322530f ff 52f952dd ff 52d752c5
+    ff 52b952aa ff 52985283 ff 52695258 ff 524d523d ff 522c5221 ff 520c51f9 ff 51ec51e0 ff 51c651b1 ff 51a651a4 ff 51a451a6
+    ff 51b251ad ff 51aa51b8 ff 51b351b8 ff 51bd51b7 ff 51b551c7 ff 51bd51c2 ff 51b151b6 ff 51af51b2 ff 51b051b8 ff 51b751af
+    ff 51a05194 ff 518f5189 ff 518d5186 ff 5185517c ff 51745165 ff 5154514a ff 5134512b ff 511c5109 ff 50ed50dc ff 50d150bc
+    ff 50a95095 ff 50775060 ff 50465036 ff 50215015 ff 5010500d ff 50015000 ff 4ff54fe7 ff 4fdc4fc6 ff 4fae4fa1 ff 4f984f89
+    ff 4f814f85 ff 4f804f74 ff 4f6d4f6a ff 4f684f63 ff 4f5d4f57 ff 4f534f4a ff 4f444f42 ff 4f3b4f34 ff 4f314f31 ff 4f284f20
+    ff 4f204f1a ff 4f1a4f1b ff 4f1a4f17 ff 4f0a4efe ff 4efd4efc ff 4ef94ef1 ff 4eee4eef ff 4eed4ee7 ff 4ee74eec ff 4ee84ee9
+    ff 4ee44edf ff 4ece4ecd ff 4ebf4eb3 ff 4ea74e9b ff 4e9d4e93 ff 4e874e78 ff 4e694e51 ff 4e3d4e30 ff 4e184dff ff 4de34dc0
+    ff 4da44d8a ff 4d6a4d60 ff 4d504d37 ff 4d1d4d03 ff 4ceb4cdd ff 4cc54cb4 ff 4ca24c93 ff 4c7f4c67 ff 4c654c46 ff 4c2d4c17
+    ff 4bff4bd9 ff 4bce4bd4 ff 4bcf4bbb ff 4bc94bbe ff 4be54be9 ff 4be54be6 ff 4bd54bce ff 4bc64bb0 ff 4ba74bb2 ff 4bb54bbe
+    ff 4bbd4bc4 ff 4bbc4bb4 ff 4baa4b8c ff 4b654b72 ff 4b644b66 ff 4b574b5a ff 4b4e4b31 ff 4b164b00 ff 4afd4ae4 ff 4ac74ab1
+    ff 4a9d4a84 ff 4a7f4a69 ff 4a5a4a46 ff 4a404a37 ff 4a2d4a2a ff 4a244a18 ff 4a0f49fc ff 49f049f6 ff 49f649f3 ff 49f549eb
+    ff 49dd49c0 ff 499f4994 ff 498d4976 ff 4971496a ff 4979499c ff 49a349a6 ff 49914999 ff 4998499a ff 49a349a2 ff 49bb49d1
+    ff 49e249f1 ff 49f549e8 ff 49fc4a03 ff 4a0b4a23 ff 4a354a59 ff 4a624a7c ff 4a894aa0 ff 4abb4ad8 ff 4ae74aec ff 4b024b1f
+    ff 4b504b70 ff 4b994bab ff 4bb24bb0 ff 4bd24bdf ff 4be94c0e ff 4c264c29 ff 4c3d4c62 ff 4c6e4c7b ff 4c904cb9 ff 4ce24cf7
+    ff 4d084d13 ff 4d184d06 ff 4d1e4d36 ff 4d3c4d3d ff 4d4d4d68 ff 4d914db0 ff 4dcd4ddf ff 4e0d4e18 ff 4e2d4e37 ff 4e4a4e51
+    ff 4e674e87 ff 4e9e4eaa ff 4ec54ed1 ff 4ed84ee4 ff 4eff4f1f ff 4f394f4c ff 4f6d4f8d ff 4fb54fcc ff 4fd34ffa ff 4ff85026
+    ff 50445056 ff 507f5076 ff 5083509d ff 50a750b0 ff 50cb50e7 ff
+    ff 026c
   """
 
 
@@ -287,18 +265,17 @@ class MessageType(IntEnum):
 @dataclass(frozen=True, slots=True)
 class Message:
   """
-  Simarine Pico TCP & UDP message.
+  Simarine Pico Message
 
   Message Layout:
-    0..4     : 0x00 0x00 0x00 0x00 0x00
-    5        : 0xFF
-    6        : msg_type (MessageType)
-    7..10    : sys_serial_number (uint32)
-    11..12   : msg_length (uint16)
-    13       : 0xFF
-    14..N    : msg_fields (MessageFields)
-    N+1     : 0xFF    -> message checksum section
-    N+2..N+3 : CRC16
+    0..4      : PREAMBLE
+    5         : MARKER(HeaderSection)
+    6         : msg_type(MessageType)
+    7..10     : sys_serial_number(uint32)
+    11..12    : msg_length(uint16)
+    13..N-3   : msg_fields(MessageFields)
+    N-2       : MARKER(ChecksumSection)
+    N-1..N    : CRC16
   """
 
   bytes: bytes
@@ -314,11 +291,11 @@ class Message:
   MARKER_BYTE: ClassVar[int] = 0xFF
   """The byte used to marker separation between fields/sections."""
 
-  PREFIX_BYTES: ClassVar[bytes] = bytes([0x00, 0x00, 0x00, 0x00, 0x00])
-  """The static message prefix bytes."""
+  PREAMBLE_BYTES: ClassVar[bytes] = bytes([0x00, 0x00, 0x00, 0x00, 0x00])
+  """The static message preamble bytes."""
 
-  PREFIX_SIZE: ClassVar[int] = 5
-  """The number of bytes used for message prefix bytes."""
+  PREAMBLE_SIZE: ClassVar[int] = 5
+  """The number of bytes used for message preamble bytes."""
 
   TYPE_POS: ClassVar[int] = 6
   """The position of the message type byte in a message header."""
@@ -366,7 +343,7 @@ class Message:
     serial_number = 0 if serial_number is None else serial_number
     serial_number_bytes = serial_number.to_bytes(cls.SERIAL_NUMBER_SIZE, "big", signed=False)
 
-    msg_bytes = bytearray(cls.PREFIX_BYTES)
+    msg_bytes = bytearray(cls.PREAMBLE_BYTES)
     msg_bytes.append(cls.MARKER_BYTE)
     msg_bytes.append(msg_type.value)
     msg_bytes.extend(serial_number_bytes)
@@ -392,11 +369,11 @@ class Message:
     if len(msg_bytes) < cls.HEADER_SIZE + cls.CRC_SIZE:
       raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE + cls.CRC_SIZE}")
 
-    if msg_bytes[: cls.PREFIX_SIZE] != cls.PREFIX_BYTES:
-      raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {msg_bytes[: cls.PREFIX_SIZE].hex()}")
+    if msg_bytes[: cls.PPREAMBLE_SIZE] != cls.PREAMBLE_BYTES:
+      raise exceptions.InvalidHeaderPreamble(f"Invalid preamble: {msg_bytes[: cls.PREAMBLE_SIZE].hex()}")
 
-    if msg_bytes[cls.PREFIX_SIZE] != cls.MARKER_BYTE:
-      raise exceptions.InvalidHeaderTerminator(f"Invalid header prefix marker byte: 0x{msg_bytes[cls.PREFIX_SIZE]:02X}")
+    if msg_bytes[cls.PREAMBLE_SIZE] != cls.MARKER_BYTE:
+      raise exceptions.InvalidHeaderMarker(f"Invalid header marker byte: 0x{msg_bytes[cls.PREAMBLE_SIZE]:02X}")
 
     msg_type = MessageType(msg_bytes[cls.TYPE_POS])
 
@@ -413,11 +390,8 @@ class Message:
     if expected_length != msg_length:
       raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
 
-    if msg_bytes[cls.HEADER_SIZE] != cls.MARKER_BYTE:
-      raise exceptions.InvalidHeaderTerminator(f"Invalid payload marker byte: 0x{msg_bytes[cls.HEADER_SIZE]:02X}")
-
     if msg_bytes[cls.CRC_MARKER_POS] != cls.MARKER_BYTE:
-      raise exceptions.InvalidHeaderTerminator(f"Invalid checksum marker byte: 0x{msg_bytes[cls.CRC_MARKER_POS]:02X}")
+      raise exceptions.InvalidChecksumMarker(f"Invalid checksum marker byte: 0x{msg_bytes[cls.CRC_MARKER_POS]:02X}")
 
     msg_crc = msg_bytes[cls.CRC_POS :]
     expected_crc = cls._CRC_FUNC(msg_bytes[: cls.CRC_MARKER_POS]).to_bytes(cls.CRC_SIZE, "big", signed=False)
@@ -450,6 +424,20 @@ class MessageFieldType(IntEnum):
 
 
 class MessageFields:
+  """
+  Simarine Pico Message Fields
+
+  Message Field Layout:
+    0       : MARKER(FieldSection)
+    1       : id(int32)
+    2       : type(MessageFieldType)
+    3..6    : value(int32) | timestamp(uint32)
+    7       : MARKER(ExtendedValueSection)
+    8..12   : value(int32)    <- if type==TIMESTAMPED_INT
+    8..N-1  : text(str(utf8)) <- if type==TIMESTAMPED_TEXT
+    N       : TEXT_END_MARKER <- if type==TIMESTAMPED_TEXT
+  """
+
   FIELD_MARKER_POS: ClassVar[int] = 0
   ID_POS: ClassVar[int] = 1
   TYPE_POS: ClassVar[int] = 2
