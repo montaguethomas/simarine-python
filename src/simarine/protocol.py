@@ -2,7 +2,7 @@ import crcmod
 import inspect
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Optional
+from typing import ClassVar, Dict, Optional
 
 from . import exceptions
 
@@ -229,7 +229,7 @@ class MessageType(IntEnum):
 # --------------------------------------------------
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Message:
   """
   Simarine Pico TCP & UDP message.
@@ -245,33 +245,34 @@ class Message:
   """
 
   bytes: bytes
+  fields: MessageFields
   length: int
   payload: bytes
   serial_number: int
   type: MessageType
 
-  HEADER_SIZE = 14
+  HEADER_SIZE: ClassVar[int] = 14
   """Number of bytes used for message header."""
 
-  PREFIX_BYTES: bytes = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
+  PREFIX_BYTES: ClassVar[bytes] = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
   """Static message prefix bytes."""
 
-  PREFIX_SIZE: int = 6
+  PREFIX_SIZE: ClassVar[int] = 6
   """Number of bytes used for message prefix (0x00 * 5 + 0xFF)."""
 
-  TYPE_BYTE_INDEX: int = 6
+  TYPE_BYTE_INDEX: ClassVar[int] = 6
   """The index of the message header for where the message type byte is."""
 
-  SERIAL_NUMBER_BYTES_INDEX: tuple[int, int] = (7, 11)
+  SERIAL_NUMBER_BYTES_INDEX: ClassVar[tuple[int, int]] = (7, 11)
   """The start and end indexes of the message header for where the system serial number bytes are."""
 
-  LENGTH_BYTES_INDEX: tuple[int, int] = (11, 13)
+  LENGTH_BYTES_INDEX: ClassVar[tuple[int, int]] = (11, 13)
   """The start and end indexes of the message header for where the message length bytes are."""
 
-  CRC_SIZE: int = 2
+  CRC_SIZE: ClassVar[int] = 2
   """Number of bytes used for message checksum."""
 
-  _CRC_FUNC = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
+  _CRC_FUNC: ClassVar = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
   """CRC Calculation Function"""
 
   def __repr__(self):
@@ -279,6 +280,7 @@ class Message:
 
   @classmethod
   def build(cls, msg_type: MessageType, payload: bytes, serial_number: int = None):
+    fields = MessageFields(payload)
     length = len(payload) + cls.CRC_SIZE + 1
     length_bytes = length.to_bytes(2, "big", signed=False)
     serial_number = 0 if serial_number is None else serial_number
@@ -296,6 +298,7 @@ class Message:
 
     return cls(
       bytes=bytes(msg_bytes),
+      fields=fields,
       length=length,
       payload=payload,
       serial_number=serial_number,
@@ -333,9 +336,11 @@ class Message:
       raise exceptions.CRCMismatch(f"CRC mismatch: expected={expected_crc.hex()}, got={msg_crc.hex()}")
 
     payload = msg_bytes[cls.HEADER_SIZE : -cls.CRC_SIZE]
+    fields = MessageFields(payload)
 
     return cls(
       bytes=msg_bytes,
+      fields=fields,
       length=msg_length,
       payload=payload,
       serial_number=msg_serial_number,
@@ -344,7 +349,7 @@ class Message:
 
 
 # --------------------------------------------------
-# Simarine Message Field Parsing
+# Simarine Message Fields
 # --------------------------------------------------
 
 
@@ -395,6 +400,9 @@ class MessageFields:
   # --------------------------------------------------
   # Access
   # --------------------------------------------------
+
+  def __repr__(self):
+    return f"<MessageFields id={self.id} type={self.type.name} value={self.value}>"
 
   def get(self, field_id: int) -> Optional["MessageFields"]:
     self._parse_all()

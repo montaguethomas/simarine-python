@@ -57,8 +57,7 @@ class SimarineClient:
 
   def get_system_info(self) -> tuple[int, str]:
     msg = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
-    fields = protocol.MessageFields(msg.payload)
-    return fields.get(1).uint32, f"{fields.get(2).int16_hi}.{fields.get(2).int16_lo}"
+    return msg.fields.get(1).uint32, f"{msg.fields.get(2).int16_hi}.{msg.fields.get(2).int16_lo}"
 
   # --------------------------------------
   # Device & Sensor Counts
@@ -66,8 +65,7 @@ class SimarineClient:
 
   def get_counts(self) -> tuple[int, int]:
     msg = self._tcp.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
-    fields = protocol.MessageFields(msg.payload)
-    return fields.get(1).value, fields.get(2).value
+    return msg.fields.get(1).value, msg.fields.get(2).value
 
   # --------------------------------------
   # Devices
@@ -79,8 +77,7 @@ class SimarineClient:
 
   def get_device(self, id: int) -> simarinetypes.Device:
     msg = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
-    fields = protocol.MessageFields(msg.payload)
-    return simarinetypes.DeviceFactory.create(fields)
+    return simarinetypes.DeviceFactory.create(msg.fields)
 
   def get_devices(self) -> dict[int, simarinetypes.Device]:
     device_count, _ = self.get_counts()
@@ -105,8 +102,7 @@ class SimarineClient:
 
   def get_sensor(self, id: int) -> simarinetypes.Sensor:
     msg = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
-    fields = protocol.MessageFields(msg.payload)
-    return simarinetypes.SensorFactory.create(fields)
+    return simarinetypes.SensorFactory.create(msg.fields)
 
   def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
     _, sensor_count = self.get_counts()
@@ -127,7 +123,7 @@ class SimarineClient:
 
   def update_sensors_state(self, sensors: dict[int, simarinetypes.Sensor]):
     msg = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
-    for field in protocol.MessageFields(msg.payload):
+    for field in msg.fields:
       if field.id in sensors:
         sensors[field.id].state_field = field
 
