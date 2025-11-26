@@ -1,5 +1,6 @@
 import argparse
 import json
+import threading
 import time
 from datetime import datetime
 from enum import Enum
@@ -20,12 +21,12 @@ def add_run_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentP
   parser.set_defaults(func=cmd_run)
 
 
-def cmd_run(args: argparse.Namespace):
+def cmd_run(args: argparse.Namespace, stop_event: threading.Event):
   with SimarineClient(args.host) as client:
     devices = client.get_devices()
     sensors = client.get_sensors()
 
-    while True:
+    while not stop_event.is_set():
       client.update_sensors_state(sensors)
 
       snapshot = {

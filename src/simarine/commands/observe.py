@@ -1,8 +1,9 @@
 import argparse
 import json
 import logging
-import time
 import sys
+import threading
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional, Dict, Any, Iterable
@@ -63,7 +64,7 @@ def _parse_field_filter(value: Optional[str]) -> Optional[set[str]]:
   return {v.strip() for v in value.split(",") if v.strip()}
 
 
-def cmd_observe_device(args: argparse.Namespace):
+def cmd_observe_device(args: argparse.Namespace, stop_event: threading.Event):
   field_filter = _parse_field_filter(args.fields)
 
   with SimarineClient(args.host) as client:
@@ -72,6 +73,7 @@ def cmd_observe_device(args: argparse.Namespace):
       return client.get_device(args.device_id)
 
     observer = ObjectObserver(
+      stop_event=stop_event,
       getter=getter,
       interval=args.interval,
       field_filter=field_filter,
@@ -86,7 +88,7 @@ def cmd_observe_device(args: argparse.Namespace):
       observer.run()
 
 
-def cmd_observe_sensor(args: argparse.Namespace):
+def cmd_observe_sensor(args: argparse.Namespace, stop_event: threading.Event):
   field_filter = _parse_field_filter(args.fields)
 
   with SimarineClient(args.host) as client:
@@ -97,6 +99,7 @@ def cmd_observe_sensor(args: argparse.Namespace):
       return sensor
 
     observer = ObjectObserver(
+      stop_event=stop_event,
       getter=getter,
       interval=args.interval,
       field_filter=field_filter,
@@ -145,6 +148,7 @@ class ObjectObserver:
 
   def __init__(
     self,
+    stop_event: threading.Event,
     getter: Callable[[], SimarineObject],
     interval: float = 1.0,
     diff_fn: Optional[Callable[[dict, dict], ObjectDiff]] = None,
@@ -154,6 +158,7 @@ class ObjectObserver:
     include_unchanged: bool = False,
     re_hints: bool = False,
   ):
+    self.stop_event = stop_event
     self.getter = getter
     self.interval = interval
     self.diff_fn = diff_fn or self._default_diff
@@ -165,7 +170,6 @@ class ObjectObserver:
 
     self._previous_state: Optional[Dict[str, Any]] = None
     self._previous_obj: Optional[SimarineObject] = None
-    self._running = False
 
   # -------------------------------
   # Normalization
@@ -365,10 +369,9 @@ class ObjectObserver:
   # -------------------------------
 
   def run(self, max_samples=None):
-    self._running = True
     count = 0
 
-    while self._running:
+    while not self.stop_event.is_set():
       self.sample()
 
       count += 1
@@ -376,6 +379,3 @@ class ObjectObserver:
         break
 
       time.sleep(self.interval)
-
-  def stop(self):
-    self._running = False
