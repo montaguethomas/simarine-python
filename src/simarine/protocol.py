@@ -31,10 +31,10 @@ class MessageType(IntEnum):
       0000000000 ff 01 00000000 0003 ff 89b8
 
   Response:
-      0000000000 ff 01 84b3ee93 0011 ff
-      01 01 84b3ee93 ff   -> Device Serial Number (uint32: 84B3EE93)
-      02 01 00010015 ff   -> Firmware Version (int16.int16: 0001.0015)
-      97a3
+      0000000000 ff 01 84b3ee93 0011
+      ff 01 01 84b3ee93   -> Serial Number (uint32: 84B3EE93)
+      ff 02 01 00010015   -> Firmware Version (int16.int16: 0001.0015)
+      ff 97a3
   """
 
   DEVICE_SENSOR_COUNT = 0x02
@@ -45,10 +45,10 @@ class MessageType(IntEnum):
       0000000000 ff 02 00000000 0003 ff 7688
 
   Response:
-      0000000000 ff 02 84b3ee93 0011 ff
-      01 01 00000013 ff   -> Device Count
-      02 01 0000001a ff   -> Sensor Count
-      76e9
+      0000000000 ff 02 84b3ee93 0011
+      ff 01 01 00000013   -> Device Count / Last Device Id (zero index)
+      ff 02 01 0000001a   -> Sensor Count / Last Sensor Id (zero index)
+      ff 76e9
   """
 
   DEVICE_INFO = 0x41
@@ -56,19 +56,22 @@ class MessageType(IntEnum):
   Request device information for a specific device index.
 
   Request:
-      0000000000 ff 41 00000000 0016 ff 00010000000b ff 010300000000 ff 00000000 ff fe6d
+      0000000000 ff 41 00000000 0016
+      ff 00 01 0000000b               -> Device Id
+      ff 01 03 00000000 ff 00000000   -> Unknown
+      ff fe6d
 
   Response:
-      0000000000 ff 41 84b3ee93 005a ff
-      00 01 0000000b ff
-      01 03 65932547 ff 00000001 ff
-      02 01 00000000 ff
-      03 04 65932547ff5343353033205b313736355d203100 ff
-      04 01 2cb15f45 ff
-      05 01 00000001 ff
-      06 03 678ef359 ff 00000011 ff
-      07 03 00000000 ff 39420bbb ff
-      4e7f
+      0000000000 ff 41 84b3ee93 005a
+      ff 00 01 0000000b
+      ff 01 03 65932547 ff 00000001
+      ff 02 01 00000000
+      ff 03 04 65932547ff5343353033205b313736355d2031 00
+      ff 04 01 2cb15f45
+      ff 05 01 00000001
+      ff 06 03 678ef359 ff 00000011
+      ff 07 03 00000000 ff 39420bbb
+      ff 4e7f
 
   Response contains structured binary fields:
   - Field 0: Device Id
@@ -81,24 +84,27 @@ class MessageType(IntEnum):
   Request sensor information for given device index.
 
   Request:
-      0000000000 ff 20 00000000 0011 ff 010100000002 ff 020100000000 ff 74ee
+      0000000000 ff 20 00000000 0011
+      ff 01 01 00000002   -> Sensor Id
+      ff 02 01 00000000   -> Unknown
+      ff 74ee
 
   Response:
-      0000000000 ff 20 84b3ee93 008b ff
-      01 01 00000002 ff
-      02 01 00000005 ff
-      03 01 00000005 ff
-      04 01 00000000 ff
-      05 03 00000000 ff 00000000 ff
-      06 03 00000000 ff 32ff1202 ff
-      07 03 00000000 ff 012c0014 ff
-      08 03 00000000 ff 00000000 ff
-      09 03 00000000 ff 32ff1202 ff
-      0a 03 00000000 ff 012c0014 ff
-      0b 03 00000000 ff 00000002 ff
-      0c 03 00000000 ff 00000000 ff
-      0d 03 00000000 ff 00000000 ff
-      6fd9
+      0000000000 ff 20 84b3ee93 008b
+      ff 01 01 00000002
+      ff 02 01 00000005
+      ff 03 01 00000005
+      ff 04 01 00000000
+      ff 05 03 00000000 ff 00000000
+      ff 06 03 00000000 ff 32ff1202
+      ff 07 03 00000000 ff 012c0014
+      ff 08 03 00000000 ff 00000000
+      ff 09 03 00000000 ff 32ff1202
+      ff 0a 03 00000000 ff 012c0014
+      ff 0b 03 00000000 ff 00000002
+      ff 0c 03 00000000 ff 00000000
+      ff 0d 03 00000000 ff 00000000
+      ff 6fd9
 
   Response provides:
   - Sensor Id
@@ -114,32 +120,32 @@ class MessageType(IntEnum):
       0000000000 ff b0000000000003 ff e237
 
   Response:
-      0000000000 ff b0 84b3ee93 00ab ff
-      00 01 691c8a3c ff
-      01 01 691c43ea ff
-      02 01 fffffc16 ff
-      03 01 00018e8f ff
-      04 01 fffffc16 ff
-      05 01 0000342a ff
-      09 01 691c8947 ff
-      0a 01 fffffc16 ff
-      0b 01 000001dd ff
-      0c 01 0008d88b ff
-      0d 01 000033f4 ff
-      0e 01 00000000 ff
-      0f 01 0000ffff ff
-      10 01 0000ffff ff
-      11 01 00005e64 ff
-      12 01 00000039 ff
-      13 01 33410062 ff
-      14 01 000001dd ff
-      15 01 000033f4 ff
-      16 01 7fffffff ff
-      17 01 000133e4 ff
-      18 01 ffffffc9 ff
-      19 01 00000035 ff
-      1a 01 7fffffff ff
-      1ec5
+      0000000000 ff b0 84b3ee93 00ab
+      ff 00 01 691c8a3c
+      ff 01 01 691c43ea
+      ff 02 01 fffffc16
+      ff 03 01 00018e8f
+      ff 04 01 fffffc16
+      ff 05 01 0000342a
+      ff 09 01 691c8947
+      ff 0a 01 fffffc16
+      ff 0b 01 000001dd
+      ff 0c 01 0008d88b
+      ff 0d 01 000033f4
+      ff 0e 01 00000000
+      ff 0f 01 0000ffff
+      ff 10 01 0000ffff
+      ff 11 01 00005e64
+      ff 12 01 00000039
+      ff 13 01 33410062
+      ff 14 01 000001dd
+      ff 15 01 000033f4
+      ff 16 01 7fffffff
+      ff 17 01 000133e4
+      ff 18 01 ffffffc9
+      ff 19 01 00000035
+      ff 1a 01 7fffffff
+      ff 1ec5
 
   Response provides:
   - Sensor Id
@@ -151,12 +157,14 @@ class MessageType(IntEnum):
   Unknown type 0x03
 
   Request:
-      0000000000 ff 03 00000000 000a ff 010100000000 ff 24d2
+      0000000000 ff 03 00000000 000a
+      ff 01 01 00000000
+      ff 24d2
 
   Response:
-      0000000000 ff 03 84b3ee93 000a ff
-      01 01 00000001 ff
-      b56e
+      0000000000 ff 03 84b3ee93 000a
+      ff 01 01 00000001
+      ff b56e
   """
 
   UNKNOWN_10 = 0x10
@@ -164,15 +172,15 @@ class MessageType(IntEnum):
   Unknown type 0x10
 
   Request:
-      0000000000 ff 10 00000000 0011 ff
-      01 01 691c8a3a ff
-      02 01 ffffb9b0 ff
-      0301
+      0000000000 ff 10 00000000 0011
+      ff 01 01 691c8a3a   -> timestamp
+      ff 02 01 ffffb9b0   -> int32? -18000
+      ff 0301
 
   Response:
-      0000000000 ff aa 84b3ee93 000a ff
-      01 01 0000ff10 ff
-      85d5
+      0000000000 ff aa 84b3ee93 000a
+      ff 01 01 0000ff10
+      ff 85d5
   """
 
   UNKNOWN_50 = 0x50
@@ -183,9 +191,9 @@ class MessageType(IntEnum):
       0000000000 ff 50 00000000 0003 ff 3036
 
   Response:
-      0000000000 ff aa 84b3ee93 000a ff
-      01 01 0000ff50 ff
-      a1b1
+      0000000000 ff aa 84b3ee93 000a
+      ff 01 01 0000ff50   -> int32? 65360
+      ff a1b1
   """
 
   UNKNOWN_AA = 0xAA
@@ -193,15 +201,15 @@ class MessageType(IntEnum):
   Unknown type 0xAA
 
   Request:
-      0000000000 ff 10 00000000 0011 ff
-      01 01 691c8a3a ff
-      02 01 ffffb9b0 ff
-      0301
+      0000000000 ff 10 00000000 0011
+      ff 01 01 691c8a3a
+      ff 02 01 ffffb9b0
+      ff 0301
 
   Response:
-      0000000000 ff aa 84b3ee93 000a ff
-      01 01 0000ff10 ff
-      85d5
+      0000000000 ff aa 84b3ee93 000a
+      ff 01 01 0000ff10
+      ff 85d5
   """
 
   UNKNOWN_C1 = 0xC1
@@ -235,13 +243,15 @@ class Message:
   Simarine Pico TCP & UDP message.
 
   Message Layout:
-    0..5     : 0x00 0x00 0x00 0x00 0x00 0xFF
-    6        : msg_type
-    7..10    : serial_number (u32)
-    11..12   : length (u16)
+    0..4     : 0x00 0x00 0x00 0x00 0x00
+    5        : 0xFF
+    6        : msg_type (MessageType)
+    7..10    : sys_serial_number (uint32)
+    11..12   : msg_length (uint16)
     13       : 0xFF
-    14..N    : payload
-    N+1..N+2 : CRC16
+    14..N    : msg_fields (MessageFields)
+    N+1     : 0xFF    -> message checksum section
+    N+2..N+3 : CRC16
   """
 
   bytes: bytes
@@ -251,50 +261,75 @@ class Message:
   serial_number: int
   type: MessageType
 
-  HEADER_SIZE: ClassVar[int] = 14
-  """Number of bytes used for message header."""
+  HEADER_SIZE: ClassVar[int] = 13
+  """The number of bytes used for the message header."""
 
-  PREFIX_BYTES: ClassVar[bytes] = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
-  """Static message prefix bytes."""
+  MARKER_BYTE: ClassVar[int] = 0xFF
+  """The byte used to marker separation between fields/sections."""
 
-  PREFIX_SIZE: ClassVar[int] = 6
-  """Number of bytes used for message prefix (0x00 * 5 + 0xFF)."""
+  PREFIX_BYTES: ClassVar[bytes] = bytes([0x00, 0x00, 0x00, 0x00, 0x00])
+  """The static message prefix bytes."""
 
-  TYPE_BYTE_INDEX: ClassVar[int] = 6
-  """The index of the message header for where the message type byte is."""
+  PREFIX_SIZE: ClassVar[int] = 5
+  """The number of bytes used for message prefix bytes."""
 
-  SERIAL_NUMBER_BYTES_INDEX: ClassVar[tuple[int, int]] = (7, 11)
-  """The start and end indexes of the message header for where the system serial number bytes are."""
+  TYPE_POS: ClassVar[int] = 6
+  """The position of the message type byte in a message header."""
 
-  LENGTH_BYTES_INDEX: ClassVar[tuple[int, int]] = (11, 13)
-  """The start and end indexes of the message header for where the message length bytes are."""
+  SERIAL_NUMBER_POS: ClassVar[int] = 7
+  """The position of the system serial number bytes in a message header."""
+
+  SERIAL_NUMBER_SIZE: ClassVar[int] = 4
+  """The number of bytes used for the system serial number bytes."""
+
+  LENGTH_POS: ClassVar[int] = 11
+  """The position of the message length bytes in a message header."""
+
+  LENGTH_SIZE: ClassVar[int] = 2
+  """The number of bytes used for the message length bytes."""
+
+  CRC_MARKER_POS: ClassVar[int] = -3
+  """The position of the marker byte for the message checksum section."""
+
+  CRC_POS: ClassVar[int] = -2
+  """The position of the message checksum bytes in a message."""
 
   CRC_SIZE: ClassVar[int] = 2
-  """Number of bytes used for message checksum."""
+  """The number of bytes used for the message checksum bytes."""
 
   _CRC_FUNC: ClassVar = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
-  """CRC Calculation Function"""
+  """
+  The message checksum calculation function.
+
+  The message checksum region is all message data, including header bytes, up to the message checksum section.
+  """
 
   def __repr__(self):
-    return f"<Message type={self.type.name} sn={self.serial_number} len={self.length} payload_len={len(self.payload)}>"
+    return (
+      f"<Message type={self.type.name} sn={self.serial_number} len={self.length} payload_len={len(self.payload)} bytes={self.bytes.hex()}>"
+    )
 
   @classmethod
   def build(cls, msg_type: MessageType, payload: bytes, serial_number: int = None):
     fields = MessageFields(payload)
-    length = len(payload) + cls.CRC_SIZE + 1
-    length_bytes = length.to_bytes(2, "big", signed=False)
+
+    length = len(payload) + 1 + cls.CRC_SIZE  # Add the checksum marker byte
+    length_bytes = length.to_bytes(cls.LENGTH_SIZE, "big", signed=False)
+
     serial_number = 0 if serial_number is None else serial_number
-    serial_number_bytes = serial_number.to_bytes(4, "big", signed=False)
+    serial_number_bytes = serial_number.to_bytes(cls.SERIAL_NUMBER_SIZE, "big", signed=False)
 
     msg_bytes = bytearray(cls.PREFIX_BYTES)
+    msg_bytes.append(cls.MARKER_BYTE)
     msg_bytes.append(msg_type.value)
     msg_bytes.extend(serial_number_bytes)
     msg_bytes.extend(length_bytes)
-    msg_bytes.append(cls.PREFIX_BYTES[-1])
+    # msg_bytes.append(cls.MARKER_BYTE) # payload should include a leading marker byte
     msg_bytes.extend(payload)
 
-    crc = cls._CRC_FUNC(msg_bytes[1:-1])
-    msg_bytes.extend(crc.to_bytes(2, "big", signed=False))
+    crc = cls._CRC_FUNC(msg_bytes)
+    msg_bytes.append(cls.MARKER_BYTE)
+    msg_bytes.extend(crc.to_bytes(cls.CRC_SIZE, "big", signed=False))
 
     return cls(
       bytes=bytes(msg_bytes),
@@ -307,35 +342,43 @@ class Message:
 
   @classmethod
   def from_bytes(cls, msg_bytes: bytes, expected_type: Optional[MessageType] = None):
-    if len(msg_bytes) < cls.HEADER_SIZE:
-      raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE}")
+    if len(msg_bytes) < cls.HEADER_SIZE + cls.CRC_SIZE:
+      raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE + cls.CRC_SIZE}")
 
     if msg_bytes[: cls.PREFIX_SIZE] != cls.PREFIX_BYTES:
-      raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {msg_bytes[:6].hex()}")
+      raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {msg_bytes[: cls.PREFIX_SIZE].hex()}")
 
-    if msg_bytes[cls.HEADER_SIZE - 1] != cls.PREFIX_BYTES[-1]:
-      raise exceptions.InvalidHeaderTerminator(f"Invalid header terminator byte: 0x{msg_bytes[13]:02X}")
+    if msg_bytes[cls.PREFIX_SIZE] != cls.MARKER_BYTE:
+      raise exceptions.InvalidHeaderTerminator(f"Invalid header prefix marker byte: 0x{msg_bytes[cls.PREFIX_SIZE]:02X}")
 
-    msg_type = MessageType(msg_bytes[cls.TYPE_BYTE_INDEX])
+    msg_type = MessageType(msg_bytes[cls.TYPE_POS])
 
     if expected_type and msg_type != expected_type:
       raise exceptions.MessageTypeMismatch(f"Expected {expected_type.name}, got {msg_type.name}")
 
-    msg_serial_number = int.from_bytes(msg_bytes[cls.SERIAL_NUMBER_BYTES_INDEX[0] : cls.SERIAL_NUMBER_BYTES_INDEX[1]], "big", signed=False)
+    msg_serial_number = int.from_bytes(
+      msg_bytes[cls.SERIAL_NUMBER_POS : cls.SERIAL_NUMBER_POS + cls.SERIAL_NUMBER_SIZE], "big", signed=False
+    )
 
-    msg_length = int.from_bytes(msg_bytes[cls.LENGTH_BYTES_INDEX[0] : cls.LENGTH_BYTES_INDEX[1]], "big", signed=False)
-    expected_length = len(msg_bytes) - cls.HEADER_SIZE + 1
+    msg_length = int.from_bytes(msg_bytes[cls.LENGTH_POS : cls.LENGTH_POS + cls.LENGTH_SIZE], "big", signed=False)
+    expected_length = len(msg_bytes) - cls.HEADER_SIZE
 
     if expected_length != msg_length:
       raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
 
-    msg_crc = msg_bytes[-cls.CRC_SIZE :]
-    expected_crc = cls._CRC_FUNC(msg_bytes[1:-3]).to_bytes(cls.CRC_SIZE, "big", signed=False)
+    if msg_bytes[cls.HEADER_SIZE] != cls.MARKER_BYTE:
+      raise exceptions.InvalidHeaderTerminator(f"Invalid payload marker byte: 0x{msg_bytes[cls.HEADER_SIZE]:02X}")
+
+    if msg_bytes[cls.CRC_MARKER_POS] != cls.MARKER_BYTE:
+      raise exceptions.InvalidHeaderTerminator(f"Invalid checksum marker byte: 0x{msg_bytes[cls.CRC_MARKER_POS]:02X}")
+
+    msg_crc = msg_bytes[cls.CRC_POS :]
+    expected_crc = cls._CRC_FUNC(msg_bytes[: cls.CRC_MARKER_POS]).to_bytes(cls.CRC_SIZE, "big", signed=False)
 
     if expected_crc != msg_crc:
       raise exceptions.CRCMismatch(f"CRC mismatch: expected={expected_crc.hex()}, got={msg_crc.hex()}")
 
-    payload = msg_bytes[cls.HEADER_SIZE : -cls.CRC_SIZE]
+    payload = msg_bytes[cls.HEADER_SIZE : cls.CRC_MARKER_POS]
     fields = MessageFields(payload)
 
     return cls(
@@ -360,6 +403,14 @@ class MessageFieldType(IntEnum):
 
 
 class MessageFields:
+  FIELD_MARKER_POS: ClassVar[int] = 0
+  ID_POS: ClassVar[int] = 1
+  TYPE_POS: ClassVar[int] = 2
+  VALUE_POS: ClassVar[int] = 3
+  VALUE_SIZE: ClassVar[int] = 4
+  TIMESTAMPED_VALUE_POS: ClassVar[int] = 8
+  TEXT_END_MARKER_BYTE: ClassVar[int] = 0x00
+
   def __init__(self, data: bytes, offset: int = 0):
     self._data = data
     self._offset = offset
@@ -431,11 +482,11 @@ class MessageFields:
 
   @property
   def id(self) -> int:
-    return self._data[self._offset]
+    return self._data[self._offset + self.ID_POS]
 
   @property
   def type(self) -> MessageFieldType:
-    return MessageFieldType(self._data[self._offset + 1])
+    return MessageFieldType(self._data[self._offset + self.TYPE_POS])
 
   @property
   def length(self) -> int:
@@ -445,10 +496,10 @@ class MessageFields:
       case MessageFieldType.TIMESTAMPED_INT:
         return 12
       case MessageFieldType.TIMESTAMPED_TEXT:
-        i = self._data.find(b"\x00\xff", self._offset + 7)
+        i = self._data.find(self.TEXT_END_MARKER_BYTE, self._offset + self.TIMESTAMPED_VALUE_POS)
         if i < 0:
           raise ValueError("Unterminated text field")
-        return i + 2 - self._offset
+        return i + 1 - self._offset  # Add the text end marker byte
 
   @property
   def _field_bytes(self) -> bytes:
@@ -457,17 +508,17 @@ class MessageFields:
   @property
   def _timestamp_bytes(self) -> Optional[bytes]:
     if self.type in [MessageFieldType.TIMESTAMPED_INT, MessageFieldType.TIMESTAMPED_TEXT]:
-      return self._field_bytes[2:6]
+      return self._field_bytes[self.VALUE_POS : self.VALUE_POS + self.VALUE_SIZE]
 
   @property
   def _value_bytes(self) -> bytes:
     match self.type:
       case MessageFieldType.INT:
-        return self._field_bytes[2:6]
+        return self._field_bytes[self.VALUE_POS : self.VALUE_POS + self.VALUE_SIZE]
       case MessageFieldType.TIMESTAMPED_INT:
-        return self._field_bytes[7:11]
+        return self._field_bytes[self.TIMESTAMPED_VALUE_POS : self.TIMESTAMPED_VALUE_POS + self.VALUE_SIZE]
       case MessageFieldType.TIMESTAMPED_TEXT:
-        return self._field_bytes[7:-2]
+        return self._field_bytes[self.TIMESTAMPED_VALUE_POS : -2]
       case _:
         return self._field_bytes
 
