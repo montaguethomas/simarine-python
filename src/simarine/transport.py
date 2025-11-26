@@ -31,12 +31,6 @@ class MessageTransport:
     self._port = port
     self._timeout = timeout
 
-    self._crc_func = crcmod.mkCrcFun(
-      0x11189,
-      initCrc=0x0000,
-      rev=False,
-      xorOut=0x0000,
-    )
     self._sock: Optional[socket.socket] = None
 
   # --------------------------------------------------
@@ -62,40 +56,6 @@ class MessageTransport:
 
   def __exit__(self, exc_type, exc, tb):
     self.close()
-
-  # --------------------------------------------------
-  # Parsing
-  # --------------------------------------------------
-
-  def _parse_message(self, response: bytes, expected_type: Optional[protocol.MessageType] = None) -> tuple[protocol.MessageType, bytes]:
-    if len(response) < protocol.MESSAGE_HEADER_SIZE:
-      raise exceptions.InvalidHeaderLength(f"Response too short: {len(response)} < {protocol.MESSAGE_HEADER_SIZE}")
-
-    if response[:6] != b"\x00\x00\x00\x00\x00\xff":
-      raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {response[:6].hex()}")
-
-    if response[13] != 0xFF:
-      raise exceptions.InvalidHeaderTerminator(f"Invalid header terminator byte: {response[13]:#04x}")
-
-    msg_type = protocol.MessageType(response[6])
-
-    if expected_type and msg_type != expected_type:
-      raise exceptions.MessageTypeMismatch(f"Expected {expected_type.name} ({expected_type:#04x}), got {msg_type.name} ({msg_type:#04x})")
-
-    expected_length = int.from_bytes(response[11:13], "big")
-    msg_length = len(response) - protocol.MESSAGE_HEADER_SIZE + 1
-
-    if expected_length != msg_length:
-      raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
-
-    expected_crc = response[-2:]
-    msg_crc = self._crc_func(response[1:-3]).to_bytes(2, "big")
-
-    if expected_crc != msg_crc:
-      raise exceptions.CRCMismatch(f"CRC mismatch: expected={expected_crc.hex()}, got={msg_crc.hex()}")
-
-    payload = response[protocol.MESSAGE_HEADER_SIZE : -2]
-    return msg_type, payload
 
 
 class MessageTransportTCP(MessageTransport):
@@ -135,39 +95,24 @@ class MessageTransportTCP(MessageTransport):
   # Send & Receive
   # --------------------------------------------------
 
-  def request(self, msg_type: protocol.MessageType, payload: bytes, bufsize: int = 8192) -> tuple[protocol.MessageType, bytes]:
+  def request(self, msg_type: protocol.MessageType, payload: bytes, bufsize: int = 8192) -> protocol.Message:
     """
     Send a request and return decoded payload.
 
     Returns:
-      (msg_type, payload_bytes)
+      Message
     """
     if not self._sock:
       raise RuntimeError("Transport not connected")
 
-    packet = self._build_frame(msg_type, payload)
-    logging.debug(f"Sending: {packet.hex()}")
-    self._sock.sendall(packet)
+    msg = protocol.Message.build(msg_type, payload)
+    logging.debug(f"Sending: {msg}")
+    self._sock.sendall(msg.bytes)
 
-    response = self._sock.recv(bufsize)
-    logging.debug(f"Received: {response.hex()}")
+    received = self._sock.recv(bufsize)
+    logging.debug(f"Received: {received.hex()}")
 
-    return self._parse_message(response, msg_type)
-
-  # --------------------------------------------------
-  # Framing & Parsing
-  # --------------------------------------------------
-
-  def _build_frame(self, msg_type: protocol.MessageType, payload: bytes) -> bytes:
-    length_bytes = (len(payload) + 3).to_bytes(2, "big")
-
-    frame = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, msg_type, 0x00, 0x00, 0x00, 0x00, length_bytes[0], length_bytes[1], 0xFF])
-    frame.extend(payload)
-
-    crc = self._crc_func(frame[1:-1])
-    frame.extend(crc.to_bytes(2, "big"))
-
-    return bytes(frame)
+    return protocol.Message.from_bytes(received, msg_type)
 
 
 class MessageTransportUDP(MessageTransport):
@@ -205,30 +150,27 @@ class MessageTransportUDP(MessageTransport):
   # Receiving
   # --------------------------------------------------
 
-  def recv(self, bufsize: int = 8192) -> tuple[protocol.MessageType, bytes, tuple[str, int]]:
+  def recv(self, bufsize: int = 8192) -> tuple[protocol.Message, tuple[str, int]]:
     """
     Receive one UDP broadcast packet.
 
     Returns:
-      (msg_type, payload_bytes, (source_ip, source_port))
+      (Message, (source_ip, source_port))
     """
     if not self._sock:
       raise RuntimeError("Transport not open")
 
-    data, addr = self._sock.recvfrom(bufsize)
-    logging.debug(f"Received UDP from {addr[0]}:{addr[1]}: {data.hex()}")
+    received, addr = self._sock.recvfrom(bufsize)
+    logging.debug(f"Received UDP from {addr[0]}:{addr[1]}: {received.hex()}")
 
-    msg_type, payload = self._parse_message(data)
-    return msg_type, payload, addr
+    return protocol.Message.from_bytes(received), addr
 
-  def listen(
-    self, bufsize: int = 8192, stop_event: Optional[threading.Event] = None
-  ) -> Iterator[tuple[protocol.MessageType, bytes, tuple[str, int]]]:
+  def listen(self, bufsize: int = 8192, stop_event: Optional[threading.Event] = None) -> Iterator[tuple[protocol.Message, tuple[str, int]]]:
     """
     Continuously yield received UDP packets.
 
     Yields:
-      (msg_type, payload_bytes, (source_ip, source_port))
+      (Message, (source_ip, source_port))
     """
     while True:
       if not self._sock:

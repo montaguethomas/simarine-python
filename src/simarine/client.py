@@ -56,8 +56,8 @@ class SimarineClient:
   # --------------------------------------
 
   def get_system_info(self) -> tuple[int, str]:
-    _, payload = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
-    fields = protocol.MessageFields(payload)
+    msg = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
+    fields = protocol.MessageFields(msg.payload)
     return fields.get(1).uint32, f"{fields.get(2).int16_hi}.{fields.get(2).int16_lo}"
 
   # --------------------------------------
@@ -65,8 +65,8 @@ class SimarineClient:
   # --------------------------------------
 
   def get_counts(self) -> tuple[int, int]:
-    _, payload = self._tcp.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
-    fields = protocol.MessageFields(payload)
+    msg = self._tcp.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
+    fields = protocol.MessageFields(msg.payload)
     return fields.get(1).value, fields.get(2).value
 
   # --------------------------------------
@@ -78,8 +78,8 @@ class SimarineClient:
     return bytes([0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
   def get_device(self, id: int) -> simarinetypes.Device:
-    _, payload = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
-    fields = protocol.MessageFields(payload)
+    msg = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
+    fields = protocol.MessageFields(msg.payload)
     return simarinetypes.DeviceFactory.create(fields)
 
   def get_devices(self) -> dict[int, simarinetypes.Device]:
@@ -104,8 +104,8 @@ class SimarineClient:
     return bytes([0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0xFF])
 
   def get_sensor(self, id: int) -> simarinetypes.Sensor:
-    _, payload = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
-    fields = protocol.MessageFields(payload)
+    msg = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
+    fields = protocol.MessageFields(msg.payload)
     return simarinetypes.SensorFactory.create(fields)
 
   def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
@@ -126,8 +126,8 @@ class SimarineClient:
   # --------------------------------------
 
   def update_sensors_state(self, sensors: dict[int, simarinetypes.Sensor]):
-    _, payload = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
-    for field in protocol.MessageFields(payload):
+    msg = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
+    for field in protocol.MessageFields(msg.payload):
       if field.id in sensors:
         sensors[field.id].state_field = field
 
@@ -135,7 +135,7 @@ class SimarineClient:
   # UDP LISTENING
   # --------------------------------------
 
-  def start_udp_listener(self, handler: Callable[[protocol.MessageType, bytes, tuple[str, int]], None]):
+  def start_udp_listener(self, handler: Callable[[protocol.Message, tuple[str, int]], None]):
     """
     Start background UDP listener.
 
@@ -148,9 +148,9 @@ class SimarineClient:
     self._udp.open()
 
     def loop():
-      for msg_type, payload, addr in self._udp.listen(stop_event=self._udp_stop):
+      for msg, addr in self._udp.listen(stop_event=self._udp_stop):
         try:
-          handler(msg_type, payload, addr)
+          handler(msg, addr)
         except Exception:
           logging.exception("UDP handler error")
 
@@ -182,7 +182,7 @@ class SimarineClient:
     udp_kwargs = udp_kwargs or {}
     with transport.MessageTransportUDP(**udp_kwargs) as udp:
       try:
-        _, _, addr = udp.recv()
+        _, addr = udp.recv()
       except TimeoutError:
         logging.info("Discovery timed out")
         return None, None, None

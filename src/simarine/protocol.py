@@ -1,19 +1,15 @@
+import crcmod
 import inspect
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Dict, Optional
 
+from . import exceptions
 
-#: Size of the Simarine message header in bytes.
-#:
-#: The header precedes every protocol message and contains sync bytes,
-#: message type, source ID, payload length and terminator marker.
-#:
-#: Example header format::
-#:
-#:   00 00 00 00 00 FF <type> <source-id:4> <length:2> FF
-#:
-#: Total size: 14 bytes.
-MESSAGE_HEADER_SIZE = 14
+
+# --------------------------------------------------
+# Simarine Message Type
+# --------------------------------------------------
 
 
 class MessageType(IntEnum):
@@ -229,7 +225,113 @@ class MessageType(IntEnum):
 
 
 # --------------------------------------------------
-# Simarine Message Parsing
+# Simarine Message
+# --------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Message:
+  """
+  Simarine Pico TCP & UDP message.
+
+  Message Layout:
+    0..5     : 0x00 0x00 0x00 0x00 0x00 0xFF
+    6        : msg_type
+    7..10    : serial_number (u32)
+    11..12   : length (u16)
+    13       : 0xFF
+    14..N    : payload
+    N+1..N+2 : CRC16
+  """
+
+  bytes: bytes
+  length: int
+  payload: bytes
+  serial_number: int
+  type: MessageType
+
+  _CRC_FUNC = crcmod.mkCrcFun(0x11189, initCrc=0x0000, rev=False, xorOut=0x0000)
+
+  #: Size of the Simarine message header in bytes.
+  #:
+  #: The header precedes every protocol message and contains sync bytes,
+  #: message type, source ID, payload length and terminator marker.
+  #:
+  #: Example header format::
+  #:
+  #:   00 00 00 00 00 FF <type> <source-id:4> <length:2> FF
+  #:
+  #: Total size: 14 bytes.
+  HEADER_SIZE = 14
+
+  @classmethod
+  def build(cls, msg_type: MessageType, payload: bytes, serial_number: int = None):
+    length = len(payload) + 3
+    length_bytes = length.to_bytes(2, "big")
+    serial_number = 0 if serial_number is None else serial_number
+    serial_number_bytes = serial_number.to_bytes(4, "big")
+
+    msg_bytes = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0xFF])
+    msg_bytes.append(msg_type.value)
+    msg_bytes.extend(serial_number_bytes)
+    msg_bytes.extend(length_bytes)
+    msg_bytes.append(0xFF)
+    msg_bytes.extend(payload)
+
+    crc = cls._CRC_FUNC(msg_bytes[1:-1])
+    msg_bytes.extend(crc.to_bytes(2, "big"))
+
+    return cls(
+      bytes=bytes(msg_bytes),
+      length=length,
+      payload=payload,
+      serial_number=serial_number,
+      type=msg_type,
+    )
+
+  @classmethod
+  def from_bytes(cls, msg_bytes: bytes, expected_type: Optional[MessageType] = None):
+    if len(msg_bytes) < cls.HEADER_SIZE:
+      raise exceptions.InvalidHeaderLength(f"Response too short: {len(msg_bytes)} < {cls.HEADER_SIZE}")
+
+    if msg_bytes[:6] != b"\x00\x00\x00\x00\x00\xff":
+      raise exceptions.InvalidHeaderPrefix(f"Invalid header prefix: {msg_bytes[:6].hex()}")
+
+    if msg_bytes[13] != 0xFF:
+      raise exceptions.InvalidHeaderTerminator(f"Invalid header terminator byte: 0x{msg_bytes[13]:02X}")
+
+    msg_type = MessageType(msg_bytes[6])
+
+    if expected_type and msg_type != expected_type:
+      raise exceptions.MessageTypeMismatch(f"Expected {expected_type.name}, got {msg_type.name}")
+
+    msg_serial_number = int.from_bytes(msg_bytes[7:11], "big", signed=False)
+
+    msg_length = int.from_bytes(msg_bytes[11:13], "big", signed=False)
+    expected_length = len(msg_bytes) - cls.HEADER_SIZE + 1
+
+    if expected_length != msg_length:
+      raise exceptions.InvalidPayloadLength(f"Length mismatch: expected={expected_length}, got={msg_length}")
+
+    msg_crc = msg_bytes[-2:]
+    expected_crc = cls._CRC_FUNC(msg_bytes[1:-3]).to_bytes(2, "big")
+
+    if expected_crc != msg_crc:
+      raise exceptions.CRCMismatch(f"CRC mismatch: expected={expected_crc.hex()}, got={msg_crc.hex()}")
+
+    payload = msg_bytes[cls.HEADER_SIZE : -2]
+
+    return cls(
+      bytes=msg_bytes,
+      length=msg_length,
+      payload=payload,
+      serial_number=msg_serial_number,
+      type=msg_type,
+    )
+
+
+# --------------------------------------------------
+# Simarine Message Field Parsing
 # --------------------------------------------------
 
 
