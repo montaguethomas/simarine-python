@@ -103,14 +103,14 @@ class SimarineClient:
 
   def get_devices(self) -> dict[int, simarinetypes.Device]:
     device_count, _ = self.get_counts()
-    logging.info("Device count: %s", device_count)
+    logging.info(f"Device count: {device_count}")
 
     devices = {}
     indices = range(0, device_count + 1)
     for idx in indices:
       device = self.get_device(idx)
-      devices[idx] = device
-      logging.info("Device index=%d id=%s type=%s name=%s", idx, device.id, device.type, device.name)
+      devices[device.id] = device
+      logging.info(f"Device index={idx} id={device.id} type={device.type} name={device.name}")
 
     return devices
 
@@ -128,14 +128,18 @@ class SimarineClient:
 
   def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
     _, sensor_count = self.get_counts()
-    logging.info("Sensor count: %s", sensor_count)
+    logging.info(
+      f"Sensor count: {sensor_count}",
+    )
 
     sensors = {}
     indices = range(0, sensor_count + 1)
     for idx in indices:
       sensor = self.get_sensor(idx)
-      sensors[idx] = sensor
-      logging.info("Sensor index=%d id=%s type=%s", idx, sensor.id, sensor.type)
+      sensors[sensor.id] = sensor
+      logging.info(
+        f"Sensor index={idx} id={sensor.id} type={sensor.type} device_id={sensor.device_id} device_sensor_id={sensor.device_sensor_id}"
+      )
 
     return sensors
 
