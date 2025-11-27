@@ -99,6 +99,9 @@ class Device(SimarineObject):
   type_id = SimarineField(1)
   name = SimarineField(3)
 
+  def __repr__(self):
+    return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
   def to_dict(self):
     out = {
       "id": self.id,
@@ -283,6 +286,9 @@ class Sensor(SimarineObject):
   type_id = SimarineField(2)
   device_id = SimarineField(3)
   device_sensor_id = SimarineField(4)
+
+  def __repr__(self):
+    return f"<{self.__class__.__name__} id={self.id} device_id={self.device_id} device_sensor_id={self.device_sensor_id} state_field={self.state_field}>"
 
   def to_dict(self):
     out = {

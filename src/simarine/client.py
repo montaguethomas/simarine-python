@@ -39,23 +39,39 @@ class SimarineClient:
     self._udp_thread: Optional[threading.Thread] = None
     self._udp_stop = threading.Event()
 
+  # --------------------------------------------------
+  # Connection Handling
+  # --------------------------------------------------
+
+  def open(self):
+    self._tcp.open()
+
+  def close(self):
+    self._tcp.close()
+    self.stop_udp_listener()
+
   # --------------------------------------
   # Context Management
   # --------------------------------------
 
   def __enter__(self):
-    self._tcp.open()
+    self.open()
     return self
 
   def __exit__(self, exc_type, exc, tb):
-    self._tcp.close()
-    self.stop_udp_listener()
+    self.close()
 
   # --------------------------------------
   # System Information
   # --------------------------------------
 
   def get_system_info(self) -> tuple[int, str]:
+    """
+    Requests the system information.
+
+    :return: serial_number, firmware_version
+    :rtype: tuple[int, str]
+    """
     msg = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
     return msg.fields.get(1).uint32, f"{msg.fields.get(2).int16_hi}.{msg.fields.get(2).int16_lo}"
 
@@ -64,6 +80,12 @@ class SimarineClient:
   # --------------------------------------
 
   def get_counts(self) -> tuple[int, int]:
+    """
+    Requests the device and sensor counts.
+
+    :return: device_count, sensor_count
+    :rtype: tuple[int, int]
+    """
     msg = self._tcp.request(protocol.MessageType.DEVICE_SENSOR_COUNT, bytes())
     return msg.fields.get(1).value, msg.fields.get(2).value
 
