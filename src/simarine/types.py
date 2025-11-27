@@ -326,10 +326,20 @@ class SensorFactory:
 # --------------------------------------------------
 
 
-class TimestampType(UnknownEnum):
-  LOCALTIME = 0  # ???
-  UTC = 1  # ???
-  UPTIME = 2  # ???
+class TimestampStateType(UnknownEnum):
+  LOCALTIME = 0
+  """System time, timezone adjusted. This is what's displayed."""
+
+  UTC = 1
+  """
+  System time, UTC/GMT ... but invalid!
+
+  Have found the value to be reverse adjusted (e.g. GMT-5, 1500 -> 1000 vs 2000).
+  Pico Firmware v1.21
+  """
+
+  BOOT_TIME = 2
+  """Boot time, timezone adjusted."""
 
 
 class NoneSensor(Sensor):
@@ -381,7 +391,7 @@ class ResistanceSensor(Sensor):
 class TimestampSensor(Sensor):
   type_id = 10
   unit = "unix_timestamp"
-  state_type = SimarineField(4, transform=TimestampType)
+  state_type = SimarineField(4, transform=TimestampStateType)
 
   unix_timestamp = SimarineState()
   datetime = SimarineState(transform=datetime.fromtimestamp)
