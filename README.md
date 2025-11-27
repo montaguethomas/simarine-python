@@ -4,6 +4,8 @@ A python implementation of the Simarine Pico Message Protocol.
 
 Based on the reverse engineering work of https://github.com/htool/pico2signalk.
 
+For details about the reverse engineered protocol, refer to [PROTOCOL.md](PROTOCOL.md).
+
 ## Installation
 
 ```sh
