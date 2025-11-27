@@ -554,7 +554,7 @@ class MessageFields:
       case MessageFieldType.TIMESTAMPED_INT:
         return self._field_bytes[self.TIMESTAMPED_VALUE_POS : self.TIMESTAMPED_VALUE_POS + self.VALUE_SIZE]
       case MessageFieldType.TIMESTAMPED_TEXT:
-        return self._field_bytes[self.TIMESTAMPED_VALUE_POS : -2]
+        return self._field_bytes[self.TIMESTAMPED_VALUE_POS : -1]
       case _:
         return self._field_bytes
 
