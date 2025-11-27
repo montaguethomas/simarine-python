@@ -211,6 +211,9 @@ class OhmmeterDevice(Device):
 class TimeDevice(Device):
   type_id = 7
 
+  name = SimarineField(3, "uint32")  # system serial number
+  timezone = SimarineField(4, scale=0.000277777777777)  # Timezone offset, originally stored in seconds; convert to hours
+
 
 class TankDevice(Device):
   type_id = 8
@@ -242,12 +245,9 @@ class BatteryDevice(Device):
 class SystemDevice(Device):
   type_id = 10
 
-  # System device fields:
-  # field 3 has serial number in uint32
-  # field 9 timestamp (a_uint32) keeps updating each request, while value (b_uint32) doesn't change
-  #
-  serial_number = SimarineField(3)
-  system_datetime = SimarineFieldTimestamp(9)
+  name = SimarineField(3, "uint32")
+  serial_number = SimarineField(3, "uint32")
+  revision_number = SimarineField(7)  # Possibly the system revision number
   wifi_ssid = SimarineField(10)
   tcp_port = SimarineField(12)
   udp_port = SimarineField(14)
