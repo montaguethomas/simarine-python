@@ -179,12 +179,15 @@ class NullDevice(Device):
 class VoltmeterDevice(Device):
   type_id = 1
 
+  serial_number = SimarineField(4, "uint32")
   parent_device_id_updated = SimarineFieldTimestamp(6)
   parent_device_id = SimarineField(6)  # 255 == unassigned
 
 
 class AmperemeterDevice(Device):
   type_id = 2
+
+  serial_number = SimarineField(4, "uint32")
 
 
 class ThermometerDevice(Device):
@@ -197,13 +200,22 @@ class ThermometerDevice(Device):
   priority = SimarineField(9)
 
 
+class Unknown4Device(Device):
+  type_id = 4
+
+  serial_number = SimarineField(4, "uint32")
+
+
 class BarometerDevice(Device):
   type_id = 5
+
+  serial_number = SimarineField(4, "uint32")
 
 
 class OhmmeterDevice(Device):
   type_id = 6
 
+  serial_number = SimarineField(4, "uint32")
   parent_device_id_updated = SimarineFieldTimestamp(7)
   parent_device_id = SimarineField(7)  # 255 == unassigned
 
@@ -281,6 +293,7 @@ class InclinometerDevice(Device):
 
 class Sensor(SimarineObject):
   state_field: protocol.MessageFields = None
+  unit: str = None
 
   id = SimarineField(1)
   type_id = SimarineField(2)
@@ -290,6 +303,10 @@ class Sensor(SimarineObject):
   def __repr__(self):
     return f"<{self.__class__.__name__} id={self.id} device_id={self.device_id} device_sensor_id={self.device_sensor_id} state_field={self.state_field}>"
 
+  @property
+  def state(self):
+    return getattr(self, self.unit) if self.unit is not None else None
+
   def to_dict(self):
     out = {
       "id": self.id,
@@ -297,6 +314,8 @@ class Sensor(SimarineObject):
       "type_id": self.type_id,
       "device_id": self.device_id,
       "device_sensor_id": self.device_sensor_id,
+      "state": self.state,
+      "unit": self.unit,
     }
     for attr, value in self.__class__.__dict__.items():
       if isinstance(value, SimarineField):
