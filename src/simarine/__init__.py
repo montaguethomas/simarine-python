@@ -54,7 +54,7 @@ from .types import (
   InclinometerDisplayType,
   TankFluidType,
   ThermometerType,
-  TimestampType,
+  TimestampStateType,
 )
 
 __all__: tuple[str, ...] = [
@@ -108,5 +108,5 @@ __all__: tuple[str, ...] = [
   "InclinometerDisplayType",
   "TankFluidType",
   "ThermometerType",
-  "TimestampType",
+  "TimestampStateType",
 ]
