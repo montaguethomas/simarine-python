@@ -1,6 +1,6 @@
 # Simarine Pico Message Protocol (Reverse‑Engineered)
 
-> **Status**
+> **Status:**
 > This document is based on reverse‑engineering of traffic between a Simarine Pico device and its companion application.
 > It describes the on‑wire message framing and checksum format that are implemented in this repository.
 > It is **not** an official specification from Simarine and may be incomplete or slightly inaccurate in places.
@@ -227,7 +227,7 @@ Common invariants implemented:
 
 - **Type echo / validation:** responses are checked to ensure that the `MessageType` matches the expected value for the request.
 - **Length validation:** the `Length` field must be consistent with the actual message size.
-- **CRC validation:** CRC mismatches are treated as fatal for that message.
+- **Checksum validation:** checksum mismatches are treated as fatal for that message.
 
 ### 4.1. Example Message (SYSTEM_INFO Request)
 
@@ -264,7 +264,7 @@ encoded as fields:
 
 On the UDP broadcast channel:
 
-- Broadcast messages use the **same message structure** and CRC as TCP.
+- Broadcast messages use the **same message structure** and checksum as TCP.
 - The Simarine Pico periodically broadcasts messages.
 - A client can:
   - Bind to the UDP port,
@@ -427,4 +427,4 @@ To integrate with a Simarine Pico device using this reverse‑engineered protoco
 4. Treat the payload as a **field‑based structure**, where field IDs and encodings are interpreted according to message type.
 
 Everything beyond that (specific message types, field IDs, and physical unit scaling) can evolve independently, as long as
-these core framing rules and CRC semantics are preserved.
+these core framing rules and checksum semantics are preserved.
