@@ -73,7 +73,7 @@ class SimarineClient:
 
   @staticmethod
   def _device_info_request_payload(idx: int) -> bytes:
-    return bytes([protocol.Message.MARKER_BYTE, 0x00, protocol.MessageFieldType.INT.value, 0x00, 0x00, 0x00, idx])
+    return bytes([0xFF, 0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00])
 
   def get_device(self, id: int) -> simarinetypes.Device:
     msg = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
@@ -98,7 +98,7 @@ class SimarineClient:
 
   @staticmethod
   def _sensor_info_request_payload(idx: int) -> bytes:
-    return bytes([protocol.Message.MARKER_BYTE, 0x01, protocol.MessageFieldType.INT.value, 0x00, 0x00, 0x00, idx])
+    return bytes([0xFF, 0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00])
 
   def get_sensor(self, id: int) -> simarinetypes.Sensor:
     msg = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
