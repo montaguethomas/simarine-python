@@ -26,7 +26,7 @@ class SimarineClient:
     tcp_kwargs.setdefault("host", host)
     udp_kwargs = udp_kwargs or {}
 
-    if not tcp_kwargs.get("host") and auto_discover:
+    if tcp_kwargs.get("host") is None and auto_discover:
       tcp_kwargs["host"], _, _ = self.discover(udp_kwargs)
       if not tcp_kwargs.get("host"):
         raise ValueError("Unable to discover Simarine device via UDP broadcast")
