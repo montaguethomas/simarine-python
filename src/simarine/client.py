@@ -144,8 +144,15 @@ class SimarineClient:
     return sensors
 
   # --------------------------------------
-  # Update Sensors State
+  # Sensors State
   # --------------------------------------
+
+  def get_sensors_state(self) -> dict[int, protocol.MessageFields]:
+    msg = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
+    sensors_state = {}
+    for field in msg.fields:
+      sensors_state[field.id] = field
+    return sensors_state
 
   def update_sensors_state(self, sensors: dict[int, simarinetypes.Sensor]):
     msg = self._tcp.request(protocol.MessageType.SENSORS_STATE, bytes())
