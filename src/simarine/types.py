@@ -422,6 +422,24 @@ class TimestampSensor(Sensor):
   datetime = SimarineState(transform=datetime.fromtimestamp)
 
 
+class StateOfChargeSensor(Sensor):
+  type_id = 11
+  unit = "percent"
+  percent = SimarineState(scale=0.0000001)  # 769713508
+
+
+# class Battery12Sensor(Sensor):
+#  type_id = 12
+#  unit = "unknown"
+#  unknown = SimarineState()  # 2147483647
+#
+#
+# class Battery13Sensor(Sensor):
+#  type_id = 13
+#  unit = "unknown"
+#  unknown = SimarineState()  # -1094720
+
+
 class AngleSensor(Sensor):
   type_id = 16
   unit = "degrees"
