@@ -81,6 +81,13 @@ class SimarineObject:
     self.fields = fields
 
   @property
+  def title(self) -> str:
+    cls_name = self.__class__.__name__
+    if cls_name == type(self).__mro__[-3].__name__:
+      return "Unknown"
+    return re.sub(r"([a-z])([A-Z])", r"\1 \2", cls_name.removesuffix(type(self).__mro__[-3].__name__))
+
+  @property
   def type(self) -> str:
     cls_name = self.__class__.__name__
     if cls_name == type(self).__mro__[-3].__name__:
@@ -105,6 +112,7 @@ class Device(SimarineObject):
   def to_dict(self):
     out = {
       "id": self.id,
+      "title": self.title,
       "type": self.type,
       "type_id": self.type_id,
       "name": self.name,
@@ -310,6 +318,7 @@ class Sensor(SimarineObject):
   def to_dict(self):
     out = {
       "id": self.id,
+      "title": self.title,
       "type": self.type,
       "type_id": self.type_id,
       "device_id": self.device_id,
