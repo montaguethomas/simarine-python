@@ -49,8 +49,8 @@ class SimarineFieldTimestamp(SimarineField):
 
 
 class SimarineState(SimarineField):
-  def __init__(self, default: Any = None, scale: float = None, transform: Callable = None):
-    super().__init__(0, "value", default, scale, transform)
+  def __init__(self, attr: str = "value", default: Any = None, scale: float = None, transform: Callable = None):
+    super().__init__(0, attr, default, scale, transform)
 
   def _get_field(self, instance, owner):
     return getattr(instance, "state_field", None)
@@ -434,7 +434,40 @@ class TimestampSensor(Sensor):
 class StateOfChargeSensor(Sensor):
   type_id = 11
   unit = "percent"
-  percent = SimarineState(scale=0.0000001)  # 769713508
+  # Original project used high 16-bit int, divided by 16000.
+  # Here we divide by 160 to get a percentage
+  percent = SimarineState(attr="int16_hi", scale=0.00625)
+
+  # Manually setting battery to full
+  #
+  # INFO ==== Simarine Object Change ====
+  # INFO Object: StateOfChargeSensor #20 (type=state_of_charge)
+  # INFO Time  : 11:43:15
+  # INFO   percent                        99.60625 → 100.00625000000001
+  # INFO   int16_lo                       14170 → 14463
+  # INFO   int16_hi                       15937 → 16001
+  # INFO   state                          99.60625 → 100.00625000000001
+  # INFO   hex                            3e41375a → 3e81387f
+  # INFO   state_field                    1044461402 → 1048655999
+  # INFO ==== Simarine Object Change ====
+  # INFO Object: StateOfChargeSensor #20 (type=state_of_charge)
+  # INFO Time  : 11:43:38
+  # INFO   int16_lo                       14463 → 14462
+  # INFO   hex                            3e81387f → 3e81387e
+  # INFO   state_field                    1048655999 → 1048655998
+  # INFO ==== Simarine Object Change ====
+  # INFO Object: StateOfChargeSensor #20 (type=state_of_charge)
+  # INFO Time  : 11:43:39
+  # INFO   percent                        100.00625000000001 → 99.90625
+  # INFO   int16_hi                       16001 → 15985
+  # INFO   state                          100.00625000000001 → 99.90625
+  # INFO   hex                            3e81387e → 3e71387e
+  # INFO   state_field                    1048655998 → 1047607422
+
+  # int16_hi = SimarineState(attr="int16_hi")
+  # int16_lo = SimarineState(attr="int16_lo")  # Unknown....
+  # hex = SimarineState(attr="_value_bytes")
+  # tried using 32-bit q fixed point int without luck
 
 
 # class Battery12Sensor(Sensor):

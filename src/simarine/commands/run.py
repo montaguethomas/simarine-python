@@ -2,7 +2,7 @@ import argparse
 import json
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 from ..client import SimarineClient
@@ -58,6 +58,8 @@ class CustomEncoder(json.JSONEncoder):
       return obj.hex(" ", 2)
     if isinstance(obj, datetime):
       return obj.isoformat()
+    if isinstance(obj, timedelta):
+      return str(obj)
     if isinstance(obj, Enum):
       return obj.name
     if hasattr(obj, "to_dict") and callable(obj.to_dict):
