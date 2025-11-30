@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Callable, Dict, Any, Type
 
@@ -445,9 +445,8 @@ class StateOfChargeSensor(Sensor):
 
 class RemainingTimeSensor(Sensor):
   type_id = 13
-  unit = "seconds"
-  seconds = SimarineState()  # -1094720
-  hours = SimarineState(scale=0.0002777777777777)
+  unit = "timedelta"
+  timedelta = SimarineState(transform=lambda v: timedelta(seconds=(v * -1)))
 
 
 class AngleSensor(Sensor):
