@@ -75,6 +75,15 @@ class SimarineClient:
     msg = self._tcp.request(protocol.MessageType.SYSTEM_INFO, bytes())
     return msg.fields.get(1).uint32, f"{msg.fields.get(2).int16_hi}.{msg.fields.get(2).int16_lo}"
 
+  def get_system_device(self) -> simarinetypes.Device:
+    """
+    Requests system device object.
+
+    :return: system_device
+    :rtype: Device
+    """
+    return self.get_device(0)
+
   # --------------------------------------
   # Device & Sensor Counts
   # --------------------------------------
@@ -98,16 +107,31 @@ class SimarineClient:
     return bytes([0xFF, 0x00, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00])
 
   def get_device(self, id: int) -> simarinetypes.Device:
+    """
+    Requests a device object by id.
+
+    :param id: Device ID
+    :type id: int
+    :return: device
+    :rtype: Device
+    """
     msg = self._tcp.request(protocol.MessageType.DEVICE_INFO, self._device_info_request_payload(id))
     return simarinetypes.DeviceFactory.create(msg.fields)
 
-  def get_devices(self) -> dict[int, simarinetypes.Device]:
+  def get_devices(self, exclude_system: bool = True) -> dict[int, simarinetypes.Device]:
+    """
+    Requests all devices.
+
+    :param exclude_system: If to exclude the system device or not.
+    :type exclude_system: bool
+    :return: devices
+    :rtype: dict[int, Device]
+    """
     device_count, _ = self.get_counts()
     logging.info(f"Device count: {device_count}")
 
     devices = {}
-    indices = range(0, device_count + 1)
-    for idx in indices:
+    for idx in range(int(exclude_system), device_count + 1):
       device = self.get_device(idx)
       devices[device.id] = device
       logging.info(f"Device index={idx} id={device.id} type={device.type} name={device.name}")
@@ -123,10 +147,24 @@ class SimarineClient:
     return bytes([0xFF, 0x01, 0x01, 0x00, 0x00, 0x00, idx, 0xFF, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00])
 
   def get_sensor(self, id: int) -> simarinetypes.Sensor:
+    """
+    Requests a sensor object by id.
+
+    :param id: Sensor ID
+    :type id: int
+    :return: sensor
+    :rtype: Sensor
+    """
     msg = self._tcp.request(protocol.MessageType.SENSOR_INFO, self._sensor_info_request_payload(id))
     return simarinetypes.SensorFactory.create(msg.fields)
 
   def get_sensors(self) -> dict[int, simarinetypes.Sensor]:
+    """
+    Requests all sensors.
+
+    :return: sensors
+    :rtype: dict[int, Sensor]
+    """
     _, sensor_count = self.get_counts()
     logging.info(
       f"Sensor count: {sensor_count}",

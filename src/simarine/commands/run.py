@@ -23,6 +23,8 @@ def add_run_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentP
 
 def cmd_run(args: argparse.Namespace, stop_event: threading.Event):
   with SimarineClient(args.host) as client:
+    system_info = client.get_system_info()
+    system_device = client.get_system_device()
     devices = client.get_devices()
     sensors = client.get_sensors()
 
@@ -30,6 +32,8 @@ def cmd_run(args: argparse.Namespace, stop_event: threading.Event):
       client.update_sensors_state(sensors)
 
       snapshot = {
+        "system_info": system_info,
+        "system_device": system_device,
         "devices": devices,
         "sensors": sensors,
         "timestamp": time.time(),
