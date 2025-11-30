@@ -432,12 +432,13 @@ class StateOfChargeSensor(Sensor):
 #  type_id = 12
 #  unit = "unknown"
 #  unknown = SimarineState()  # 2147483647
-#
-#
-# class Battery13Sensor(Sensor):
-#  type_id = 13
-#  unit = "unknown"
-#  unknown = SimarineState()  # -1094720
+
+
+class RemainingTimeSensor(Sensor):
+  type_id = 13
+  unit = "seconds"
+  seconds = SimarineState()  # -1094720
+  hours = SimarineState(scale=0.0002777777777777)
 
 
 class AngleSensor(Sensor):
