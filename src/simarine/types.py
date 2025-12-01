@@ -438,7 +438,24 @@ class StateOfChargeSensor(Sensor):
   # Here we divide by 160 to get a percentage
   percent = SimarineState(attr="int16_hi", scale=0.00625)
 
-  # Manually setting battery to full
+  # int16_hi = SimarineState(attr="int16_hi")
+  # int16_lo = SimarineState(attr="int16_lo")  # Unknown....
+  # hex = SimarineState(attr="_value_bytes")
+
+  # Manually setting battery to full:
+  #
+  #    749789116   ->    1048633276
+  # 2CB1    C66C   ->  3E81    387C
+  # 11441  50804      16001   14460
+  #
+  # Simarine chose 16000 as their "100% scale" but that is mathematically equivalent to:
+  #
+  # SOC_fixed = (SOC_percent × 655.36) / 4.096
+  #
+  # - 2^16 = 65536 / 100 = 655.36
+  # - Their internal ADC or integration pipeline uses a 4096 scaling factor somewhere (ADC baseline)
+  # - They simply divided the Q16.16 representation by 4.096 to get a nice round scale 0–16000
+  # This is very common in systems where battery current sampling is based on a 12-bit ADC.
   #
   # INFO ==== Simarine Object Change ====
   # INFO Object: StateOfChargeSensor #20 (type=state_of_charge)
@@ -463,11 +480,6 @@ class StateOfChargeSensor(Sensor):
   # INFO   state                          100.00625000000001 → 99.90625
   # INFO   hex                            3e81387e → 3e71387e
   # INFO   state_field                    1048655998 → 1047607422
-
-  # int16_hi = SimarineState(attr="int16_hi")
-  # int16_lo = SimarineState(attr="int16_lo")  # Unknown....
-  # hex = SimarineState(attr="_value_bytes")
-  # tried using 32-bit q fixed point int without luck
 
 
 # class Battery12Sensor(Sensor):

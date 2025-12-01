@@ -325,7 +325,6 @@ Field mapping for Device Information (`MessageType = 0x41`) responses:
 | 0        | int32      | Device ID         |                             |
 | 1        | uint32     | Created Timestamp | When the device was created |
 | 1        | int32      | Device Type       | The type of device          |
-| 2        | int32      | Unknown.2         | Unknown                     |
 | 3        | text/int32 | Name/Role         | Normally name of device     |
 
 Interpretation of the remaining fields depend on the device type.
@@ -374,8 +373,10 @@ The mapping of Sensor Types:
 | 4           | Temperature      |             |
 | 5           | Atmosphere       |             |
 | 6           | Atmosphere Trend |             |
-| 7           | Resistantce      |             |
+| 7           | Resistance       |             |
 | 10          | Timestamp        |             |
+| 11          | State of Charge  |             |
+| 13          | Remaining Time   |             |
 | 16          | Angle            |             |
 | 22          | User             |             |
 
@@ -388,7 +389,25 @@ Field mapping for Sensor State (`MessageType = 0xB0`) responses:
 | 1        | int32        | Sensor ID    |                         |
 | 2        | int32/uint32 | Sensor State | The state of the sensor |
 
-State interpretation depends on the sensor type.
+### 7.5.1. State Interpretations
+
+State interpretation depends on the sensor type:
+
+| Sensor Type      | Description                                  |
+| ---------------- | -------------------------------------------- |
+| None             |                                              |
+| Voltage          | int32 / 1000 = volts                         |
+| Current          | int32 / 100 = amps                           |
+| Coulomb Counter  | int32 / 1000 = amp hours                     |
+| Temperature      | int32 / 10 = celsius                         |
+| Atmosphere       | int32 / 100 = millibars                      |
+| Atmosphere Trend | int32 / 10 = millibars/hour                  |
+| Resistance       | int32 = ohms                                 |
+| Timestamp        | uint32 = unix timestamp                      |
+| State of Charge  | int16_hi / 160 = percent; int16_lo = unknown |
+| Remaining Time   | int32 = seconds                              |
+| Angle            | int32 / 10 = degrees                         |
+| User             |                                              |
 
 ---
 
