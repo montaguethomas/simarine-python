@@ -478,7 +478,8 @@ class StateOfChargeSensor(Sensor):
 
 class RemainingTimeSensor(Sensor):
   type_id = 13
-  unit = "timedelta"
+  unit = "seconds"
+  seconds = SimarineState(scale=-1)
   timedelta = SimarineState(transform=lambda v: timedelta(seconds=(v * -1)))
 
 
