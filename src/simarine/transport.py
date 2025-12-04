@@ -195,8 +195,8 @@ class MessageTransportMQTT(MessageTransport):
   def __init__(self, serial_number: int, host: str = DEFAULT_MQTT_HOST, port: int = DEFAULT_MQTT_PORT, timeout: float = 5.0) -> None:
     super().__init__(host, port, timeout)
 
-    self._topic_pub = f"{serial_number}_APP"
-    self._topic_sub = f"{serial_number}_DEV"
+    self._topic_pub = f"/{serial_number}_APP"
+    self._topic_sub = f"/{serial_number}_DEV"
 
     self._client: Optional[mqtt.Client] = None
     self._message_queue: queue.Queue[mqtt.MQTTMessage] = queue.Queue(maxsize=1)
