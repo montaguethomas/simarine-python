@@ -32,6 +32,7 @@ class Observe(Command):
 
   @classmethod
   def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    super().add_arguments(parser)
     parser.add_argument("--host")
     parser.add_argument("--interval", type=float, default=1.0)
     parser.add_argument("--once", action="store_true")
@@ -70,6 +71,7 @@ class Device(Observe):
 
   @classmethod
   def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    super().add_arguments(parser)
     parser.add_argument("device_id", type=int)
 
   @classmethod
@@ -82,6 +84,7 @@ class Sensor(Observe):
 
   @classmethod
   def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    super().add_arguments(parser)
     parser.add_argument("sensor_id", type=int)
 
   @classmethod

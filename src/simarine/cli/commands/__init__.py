@@ -72,11 +72,11 @@ class Command:
 
     if cls.path in Command.children:
       # group command
-      sub = parser.add_subparsers(dest=f"{segment}_command", title=f"{segment} commands", required=True)
+      subparser = parser.add_subparsers(dest=f"{segment}_command", title=f"{segment} commands", required=True)
 
       for child_path in sorted(Command.children[cls.path]):
         child_cls = Command.registry[child_path]
-        child_cls.build_subparser(sub)
+        child_cls.build_subparser(subparser)
 
     else:
       # leaf command
@@ -88,7 +88,7 @@ class Command:
   @classmethod
   def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
     """Override in subclasses to define arguments."""
-    pass
+    parser.add_argument("--debug", action="store_true")
 
   @classmethod
   def run(cls, args: argparse.Namespace, stop_event: threading.Event) -> None:

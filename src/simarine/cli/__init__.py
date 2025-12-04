@@ -20,7 +20,6 @@ def main():
   signal.signal(signal.SIGTERM, handle_interrupt)
 
   parser = commands.Command.build_parser(description="Simarine CLI")
-  parser.add_argument("--debug", action="store_true")
   args = parser.parse_args()
 
   loglevel = logging.DEBUG if args.debug else logging.INFO

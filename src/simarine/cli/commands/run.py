@@ -14,6 +14,7 @@ class Run(Command):
 
   @classmethod
   def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    super().add_arguments(parser)
     parser.add_argument("--host")
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("--interval", type=float, default=5.0)
