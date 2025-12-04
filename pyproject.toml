@@ -19,21 +19,25 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 
-[project.scripts]
-simarine = "simarine.cli:main"
-
-
-[project.urls]
-Homepage = "https://github.com/montaguethomas/simarine-python/"
-
-
 [project.optional-dependencies]
+cli = [
+  "matplotlib",
+  "numpy",
+]
 dev = [
   "setuptools_scm",
   "pytest",
   "pytest-cov",
   "ruff",
 ]
+
+
+[project.scripts]
+simarine = "simarine.cli:main"
+
+
+[project.urls]
+Homepage = "https://github.com/montaguethomas/simarine-python/"
 
 
 [tool.ruff]

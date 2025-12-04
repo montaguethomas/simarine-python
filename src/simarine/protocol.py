@@ -219,25 +219,18 @@ class MessageType(IntEnum):
     ff 85d5
   """
 
-  UNKNOWN_C1 = 0xC1
+  ATMOSPHERIC_PRESSURE_HISTORY = 0xC1
   """
-  Unknown type 0xC1 (UDP multicast)
+  Broadcasted atmospheric pressure history (timeseries).
 
-  Multicast Group: 43210
-
-  Appears to broadcast waveform/trend ADC-like data stream.
-
-  Characteristics:
-  - High frequency
-  - Repeating 16-bit word pairs
-  - Likely internal sampling buffer or oscilloscope view
-  - Probably intended only for diagnostics or internal UI
+  Sampled over 72 hrs, ordered newest -> oldest.
 
   Received:
     0000000000 ff c1 84b3ee93 0477
-    ff 00 0b 691c89f0 ff 691c89f0 <- these are timestamps
-    ff e1
-    ff 560b560a ff 560f5611 ff 560e5609 ff 560b560f ff 5611561a ff 56195621 ff 5624562a ff 561e5612 ff 5619561f ff 5614560d
+    ff 00 0b 691c89f0 ff 691c89f0 -> field id (0), field type (0b -> 11), timestamp1 (uint32), marker, timestamp2 (uint32)
+    ff e1 -> number of 32-bit blocks!
+    ff 560b560a -> int16_hi, int16_lo? millibars graph over time? max 72 hrs
+    ff 560f5611 ff 560e5609 ff 560b560f ff 5611561a ff 56195621 ff 5624562a ff 561e5612 ff 5619561f ff 5614560d
     ff 5611560c ff 5606560e ff 560b5616 ff 5613560b ff 560555fd ff 55f155ea ff 55db55d4 ff 55d155d4 ff 55ce55d2 ff 55b955a9
     ff 55a05591 ff 558a5581 ff 556a556c ff 5567556e ff 55695563 ff 555d5549 ff 55315525 ff 551e5516 ff 5512550c ff 55075504
     ff 550054fb ff 54f354f3 ff 54e854e5 ff 54df54ce ff 54be54b1 ff 54a854a6 ff 54a0549e ff 5499549f ff 549a5491 ff 54895489
@@ -259,7 +252,8 @@ class MessageType(IntEnum):
     ff 4b504b70 ff 4b994bab ff 4bb24bb0 ff 4bd24bdf ff 4be94c0e ff 4c264c29 ff 4c3d4c62 ff 4c6e4c7b ff 4c904cb9 ff 4ce24cf7
     ff 4d084d13 ff 4d184d06 ff 4d1e4d36 ff 4d3c4d3d ff 4d4d4d68 ff 4d914db0 ff 4dcd4ddf ff 4e0d4e18 ff 4e2d4e37 ff 4e4a4e51
     ff 4e674e87 ff 4e9e4eaa ff 4ec54ed1 ff 4ed84ee4 ff 4eff4f1f ff 4f394f4c ff 4f6d4f8d ff 4fb54fcc ff 4fd34ffa ff 4ff85026
-    ff 50445056 ff 507f5076 ff 5083509d ff 50a750b0 ff 50cb50e7 ff
+    ff 50445056 ff 507f5076 ff 5083509d ff 50a750b0 ff 50cb50e7
+    ff -> end marker
     ff 026c
   """
 
@@ -428,7 +422,7 @@ class MessageFieldType(IntEnum):
   INT = 0x01
   TIMESTAMPED_INT = 0x03
   TIMESTAMPED_TEXT = 0x04
-  UNKNOWN_0B = 0x0B  # found in MessageType.UNKNOWN_C1 messages
+  TIMESERIES = 0x0B
 
 
 class MessageFields:
@@ -452,6 +446,9 @@ class MessageFields:
   VALUE_POS: ClassVar[int] = 3
   VALUE_SIZE: ClassVar[int] = 4
   TIMESTAMPED_VALUE_POS: ClassVar[int] = 8
+  TIMESERIES_COUNT_POS: ClassVar[int] = 13
+  TIMESERIES_VALUE_POS: ClassVar[int] = 14
+  TIMESERIES_VALUE_SIZE: ClassVar[int] = 5
   TEXT_END_MARKER_BYTE: ClassVar[int] = 0x00
 
   def __init__(self, data: bytes, offset: int = 0):
@@ -543,6 +540,13 @@ class MessageFields:
         if i < 0:
           raise ValueError("Unterminated text field")
         return i + 1 - self._offset  # Add the text end marker byte
+      case MessageFieldType.TIMESERIES:
+        # ff 00 0b 69319d40 ff 69319d40 ff e1 ff 546a 5464 ff 5461 5453 ... ff 5849 5846 ff ff <checksum>
+        count = self._data[self.TIMESERIES_COUNT_POS]
+        marker_pos = self.TIMESERIES_VALUE_POS + (count * self.TIMESERIES_VALUE_SIZE)
+        if self._data[self._offset + marker_pos] != Message.MARKER_BYTE:
+          raise ValueError("Unterminated timeseries field")
+        return marker_pos + 1  # Include the end marker
 
   @property
   def _field_bytes(self) -> bytes:
@@ -550,7 +554,7 @@ class MessageFields:
 
   @property
   def _timestamp_bytes(self) -> Optional[bytes]:
-    if self.type in [MessageFieldType.TIMESTAMPED_INT, MessageFieldType.TIMESTAMPED_TEXT]:
+    if self.type in [MessageFieldType.TIMESTAMPED_INT, MessageFieldType.TIMESTAMPED_TEXT, MessageFieldType.TIMESERIES]:
       return self._field_bytes[self.VALUE_POS : self.VALUE_POS + self.VALUE_SIZE]
 
   @property
@@ -562,6 +566,8 @@ class MessageFields:
         return self._field_bytes[self.TIMESTAMPED_VALUE_POS : self.TIMESTAMPED_VALUE_POS + self.VALUE_SIZE]
       case MessageFieldType.TIMESTAMPED_TEXT:
         return self._field_bytes[self.TIMESTAMPED_VALUE_POS : -1]
+      case MessageFieldType.TIMESERIES:
+        return self._field_bytes[self.TIMESERIES_VALUE_POS : -1]
       case _:
         return self._field_bytes
 
@@ -600,7 +606,22 @@ class MessageFields:
       return int.from_bytes(self._timestamp_bytes, "big", signed=False)
 
   @property
+  def timeseries(self) -> Optional[list[int]]:
+    if self.type == MessageFieldType.TIMESERIES:
+      series: list[int] = []
+      for i in range(0, len(self._value_bytes), 5):
+        if self._value_bytes[i] != Message.MARKER_BYTE:
+          raise ValueError(f"Timeseries block mismatch at index {i}, expected {Message.MARKER_BYTE}, got 0x{self._value_bytes[i]:02X}")
+        series.append(int.from_bytes(self._value_bytes[i + 1 : i + 3], "big", signed=False))
+        series.append(int.from_bytes(self._value_bytes[i + 3 : i + 5], "big", signed=False))
+      return series
+
+  @property
   def value(self) -> int | str:
-    if self.type == MessageFieldType.TIMESTAMPED_TEXT:
-      return self.text
-    return self.int32
+    match self.type:
+      case MessageFieldType.TIMESTAMPED_TEXT:
+        return self.text
+      case MessageFieldType.TIMESERIES:
+        return self.timeseries
+      case _:
+        return self.int32
