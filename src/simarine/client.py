@@ -17,6 +17,7 @@ class SimarineClient:
 
   def __init__(self, host: str = None, auto_discover: bool = True, **kwargs) -> None:
     kwargs.setdefault("host", host)
+
     if kwargs.get("host") is None and auto_discover:
       kwargs["host"], _, _ = self.discover()
       if not kwargs.get("host"):
@@ -225,7 +226,12 @@ class SimarineMQTTClient(SimarineClient):
   High-level Simarine client built on MessageTransportMQTT.
   """
 
-  def __init__(self, **kwargs) -> None:
+  def __init__(self, serial_number: str, **kwargs) -> None:
+    kwargs.setdefault("serial_number", serial_number)
+
+    if not kwargs.get("serial_number"):
+      raise ValueError("Serial Number must be provided")
+
     self._transport = transport.MessageTransportMQTT(**kwargs)
 
 
