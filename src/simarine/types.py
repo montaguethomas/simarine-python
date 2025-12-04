@@ -16,10 +16,11 @@ from . import protocol
 
 
 class SimarineField:
-  def __init__(self, id: int, attr: str = "value", default: Any = None, scale: float = None, transform: Callable = None):
+  def __init__(self, id: int, attr: str = "value", default: Any = None, empty: Any = None, scale: float = None, transform: Callable = None):
     self.id = id
     self.attr = attr
     self.default = default
+    self.empty = empty
     self.scale = scale
     self.transform = transform
 
@@ -32,7 +33,7 @@ class SimarineField:
       return self.default
 
     value = getattr(field, self.attr)
-    if value is None:
+    if value is None or value == self.empty:
       return self.default
 
     if self.scale:
@@ -49,12 +50,12 @@ class SimarineField:
 
 class SimarineFieldTimestamp(SimarineField):
   def __init__(self, id: int, transform: Callable = datetime.fromtimestamp):
-    super().__init__(id, "timestamp", None, None, transform)
+    super().__init__(id=id, attr="timestamp", transform=transform)
 
 
 class SimarineState(SimarineField):
-  def __init__(self, attr: str = "value", default: Any = None, scale: float = None, transform: Callable = None):
-    super().__init__(0, attr, default, scale, transform)
+  def __init__(self, attr: str = "value", default: Any = None, empty: Any = None, scale: float = None, transform: Callable = None):
+    super().__init__(id=0, attr=attr, default=default, empty=empty, scale=scale, transform=transform)
 
   def _get_field(self, instance, owner):
     return getattr(instance, "state_field", None)
@@ -152,6 +153,13 @@ class DeviceFactory:
 # --------------------------------------------------
 
 
+class BarometerTimeIntervalType(UnknownEnum):
+  HOURS_3 = 1
+  HOURS_12 = 2
+  HOURS_24 = 3
+  HOURS_72 = 4
+
+
 class BatteryType(UnknownEnum):
   WEB_LOW_MAINTENANCE = 1
   WET_MAINTENANCE_FREE = 2
@@ -159,6 +167,12 @@ class BatteryType(UnknownEnum):
   DEEP_CYCLE = 4
   GEL = 5
   LIFEPO4 = 6
+
+
+class BatteryDisplayType(UnknownEnum):
+  STANDARD = 1
+  DETAILED = 2
+  VOLTAGE_ONLY = 3
 
 
 class InclinometerType(UnknownEnum):
@@ -193,7 +207,7 @@ class VoltmeterDevice(Device):
 
   serial_number = SimarineField(4, "uint32")
   parent_device_id_updated = SimarineFieldTimestamp(6)
-  parent_device_id = SimarineField(6)  # 255 == unassigned
+  parent_device_id = SimarineField(6, empty=255)  # 255 == unassigned
 
 
 class AmperemeterDevice(Device):
@@ -222,6 +236,9 @@ class BarometerDevice(Device):
   type_id = 5
 
   serial_number = SimarineField(4, "uint32")
+  altitude = SimarineField(5)  # 0 ft == 0; 5 ft == 12; 20 ft == 60
+  time_interval = SimarineField(6, transform=BarometerTimeIntervalType)
+  operation_mode = SimarineField(8, transform=OnOffType)
 
 
 class OhmmeterDevice(Device):
@@ -229,7 +246,7 @@ class OhmmeterDevice(Device):
 
   serial_number = SimarineField(4, "uint32")
   parent_device_id_updated = SimarineFieldTimestamp(7)
-  parent_device_id = SimarineField(7)  # 255 == unassigned
+  parent_device_id = SimarineField(7, empty=255)  # 255 == unassigned
 
 
 class TimeDevice(Device):
@@ -253,7 +270,7 @@ class TankDevice(Device):
 class BatteryDevice(Device):
   type_id = 9
 
-  voltmeter_device_id = SimarineField(4)
+  voltmeter_device_id = SimarineField(4, empty=255)
   capacity_c20_updated = SimarineFieldTimestamp(5)
   capacity_c20 = SimarineField(5, scale=0.01)
   capacity_c10_updated = SimarineFieldTimestamp(6)
@@ -263,7 +280,9 @@ class BatteryDevice(Device):
   battery_type_updated = SimarineFieldTimestamp(8)
   battery_type = SimarineField(8, transform=BatteryType)
   temperature_device_id_updated = SimarineFieldTimestamp(10)
-  temperature_device_id = SimarineField(10)
+  temperature_device_id = SimarineField(10, empty=255)
+  display_type_updated = SimarineFieldTimestamp(16)
+  display_type = SimarineField(16, transform=BatteryDisplayType)
 
 
 class SystemDevice(Device):
@@ -411,19 +430,19 @@ class TemperatureSensor(Sensor):
 class AtmosphereSensor(Sensor):
   type_id = 5
   unit = "millibars"
-  millibars = SimarineState(scale=0.01)
+  millibars = SimarineState(empty=-1002, scale=0.01)  # -1002 == Unknown
 
 
 class AtmosphereTrendSensor(Sensor):
   type_id = 6
   unit = "millibars_per_hour"
-  millibars_per_hour = SimarineState(scale=0.1)
+  millibars_per_hour = SimarineState(empty=-1002, scale=0.1)  # -1002 == Unknown
 
 
 class ResistanceSensor(Sensor):
   type_id = 7
   unit = "ohms"
-  ohms = SimarineState()
+  ohms = SimarineState(empty=65535)
 
 
 class TimestampSensor(Sensor):

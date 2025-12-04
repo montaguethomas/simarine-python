@@ -48,7 +48,7 @@ class Observe(Command):
     with SimarineClient(args.host) as client:
       observer = ObjectObserver(
         stop_event=stop_event,
-        getter=cls.getter(client, args),
+        getter=lambda: cls.getter(client, args),
         interval=args.interval,
         field_filter=field_filter,
         json_mode=args.json,
