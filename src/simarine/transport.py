@@ -192,7 +192,7 @@ class MessageTransportMQTT(MessageTransport):
   MQTT transport for communicating with a Simarine Pico device.
   """
 
-  def __init__(self, serial_number: int, host: str = DEFAULT_MQTT_HOST, port: int = DEFAULT_MQTT_PORT, timeout: float = 5.0) -> None:
+  def __init__(self, serial_number: int, host: str = DEFAULT_MQTT_HOST, port: int = DEFAULT_MQTT_PORT, timeout: float = 10.0) -> None:
     super().__init__(host, port, timeout)
 
     self._topic_pub = f"/{serial_number}_APP"
