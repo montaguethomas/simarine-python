@@ -2,6 +2,8 @@
 Simarine Protocol
 """
 
+from __future__ import annotations
+
 import inspect
 from dataclasses import dataclass
 from enum import IntEnum
@@ -284,7 +286,7 @@ class Message:
   """
 
   bytes: bytes
-  fields: "MessageFields"
+  fields: MessageFields
   length: int
   payload: bytes
   serial_number: int
@@ -496,18 +498,18 @@ class MessageFields:
   def __repr__(self):
     return f"<MessageFields id={self.id} type={self.type.name} value={self.value}>"
 
-  def get(self, field_id: int) -> Optional["MessageFields"]:
+  def get(self, field_id: int) -> Optional[MessageFields]:
     self._parse_all()
     return self._fields.get(field_id)
 
-  def __getitem__(self, field_id: int) -> Optional["MessageFields"]:
+  def __getitem__(self, field_id: int) -> Optional[MessageFields]:
     return self.get(field_id)
 
   def items(self):
     self._parse_all()
     return self._fields.items()
 
-  def as_dict(self) -> Dict[int, "MessageFields"]:
+  def as_dict(self) -> Dict[int, MessageFields]:
     self._parse_all()
     return self._fields
 

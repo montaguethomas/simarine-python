@@ -4,7 +4,7 @@ Simarine protocol client and parser.
 Provides transport, protocol decoding, and object models for devices and sensors.
 """
 
-from .client import SimarineClient
+from .client import SimarineClient, SimarineMQTTClient, SimarineUDPClient
 from .exceptions import (
   ProtocolError,
   InvalidHeaderLength,
@@ -22,7 +22,7 @@ from .exceptions import (
   UDPListenerNotRunning,
 )
 from .protocol import MessageType, MessageFieldType, MessageFields
-from .transport import DEFAULT_TCP_PORT, DEFAULT_UDP_PORT
+from .transport import DEFAULT_TCP_PORT, DEFAULT_UDP_PORT, DEFAULT_MQTT_HOST, DEFAULT_MQTT_PORT
 from .types import (
   Device,
   NullDevice,
@@ -58,7 +58,11 @@ from .types import (
 )
 
 __all__: tuple[str, ...] = [
+  # client
   "SimarineClient",
+  "SimarineMQTTClient",
+  "SimarineUDPClient",
+  # exceptions
   "ProtocolError",
   "InvalidHeaderLength",
   "InvalidHeaderPreamble",
@@ -73,11 +77,16 @@ __all__: tuple[str, ...] = [
   "ClientError",
   "UDPListenerAlreadyRunning",
   "UDPListenerNotRunning",
+  # protocol
   "MessageType",
   "MessageFieldType",
   "MessageFields",
+  # transport
   "DEFAULT_TCP_PORT",
   "DEFAULT_UDP_PORT",
+  "DEFAULT_MQTT_HOST",
+  "DEFAULT_MQTT_PORT",
+  # types
   "Device",
   "NullDevice",
   "VoltmeterDevice",

@@ -2,6 +2,8 @@
 Simarine Client
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 from typing import Callable, Optional
@@ -42,7 +44,7 @@ class SimarineClient:
   # Context Management
   # --------------------------------------
 
-  def __enter__(self) -> "SimarineClient":
+  def __enter__(self) -> SimarineClient:
     self.open()
     return self
 

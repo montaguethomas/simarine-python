@@ -2,6 +2,8 @@
 Simarine Transport
 """
 
+from __future__ import annotations
+
 import logging
 import queue
 import socket
@@ -57,7 +59,7 @@ class MessageTransport:
   # Context Management
   # --------------------------------------
 
-  def __enter__(self) -> "MessageTransport":
+  def __enter__(self) -> MessageTransport:
     self.open()
     return self
 
