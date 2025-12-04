@@ -1,8 +1,13 @@
-import crcmod
+"""
+Simarine Protocol
+"""
+
 import inspect
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import ClassVar, Dict, Optional
+
+import crcmod
 
 from . import exceptions
 

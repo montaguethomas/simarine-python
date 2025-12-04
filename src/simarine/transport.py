@@ -1,4 +1,7 @@
-import crcmod
+"""
+Simarine Transport
+"""
+
 import logging
 import socket
 import threading
@@ -61,12 +64,6 @@ class MessageTransport:
 class MessageTransportTCP(MessageTransport):
   """
   Low-level TCP transport for communicating with a Simarine Pico device.
-
-  Handles:
-    - TCP connection
-    - Message framing and CRC
-    - Validation
-    - Payload extraction
   """
 
   def __init__(self, host: str, port: int = DEFAULT_TCP_PORT, timeout: float = 5.0):

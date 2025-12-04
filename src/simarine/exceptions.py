@@ -1,3 +1,8 @@
+"""
+Simarine Exceptions
+"""
+
+
 class ProtocolError(Exception):
   """Base class for Simarine protocol errors."""
 

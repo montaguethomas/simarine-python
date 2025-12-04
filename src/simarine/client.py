@@ -1,3 +1,7 @@
+"""
+Simarine Client
+"""
+
 import logging
 import threading
 from typing import Callable, Optional

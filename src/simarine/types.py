@@ -1,3 +1,7 @@
+"""
+Simarine Types
+"""
+
 import re
 from datetime import datetime, timedelta
 from enum import Enum

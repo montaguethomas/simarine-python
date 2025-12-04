@@ -1,3 +1,7 @@
+"""
+Simarine CLI
+"""
+
 import logging
 import signal
 import threading
