@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional, Dict, Any, Iterable
 
-from ..client import SimarineClient
-from ..types import SimarineObject
-from ..protocol import MessageFields
+from . import Command
+from ...client import SimarineClient
+from ...protocol import MessageFields
+from ...types import SimarineObject
 
 
 USE_COLOR = sys.stdout.isatty()
@@ -26,92 +27,74 @@ COLOR_RESET = "\033[0m" if USE_COLOR else ""
 # --------------------------------------------------
 
 
-def add_observe_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
-  observe = subparsers.add_parser("observe", help="Observe changes on a single device or sensor")
-  observe_sub = observe.add_subparsers(dest="observe_type", required=True)
+class Observe(Command):
+  """Observe changes on a single device or sensor"""
 
-  add_observe_device_subcommand(observe_sub)
-  add_observe_sensor_subcommand(observe_sub)
+  @classmethod
+  def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--host")
+    parser.add_argument("--interval", type=float, default=1.0)
+    parser.add_argument("--once", action="store_true")
+    parser.add_argument("--fields", help="Comma-separated field names or paths (ex: ohms,state_field,fields.18)")
+    parser.add_argument("--json", action="store_true", help="Emit diffs as JSON")
+    parser.add_argument("--include-unchanged", action="store_true", help="Include unchanged fields in output")
+    parser.add_argument("--re-hints", action="store_true", help="Enable automatic RE hints for field behavior")
+
+  @classmethod
+  def run(cls, args: argparse.Namespace, stop_event: threading.Event) -> None:
+    field_filter = _parse_field_filter(args.fields)
+
+    with SimarineClient(args.host) as client:
+      observer = ObjectObserver(
+        stop_event=stop_event,
+        getter=cls.getter(client, args),
+        interval=args.interval,
+        field_filter=field_filter,
+        json_mode=args.json,
+        include_unchanged=args.include_unchanged,
+        re_hints=args.re_hints,
+      )
+
+      if args.once:
+        observer.sample()
+      else:
+        observer.run()
+
+  @classmethod
+  def getter(cls, client: SimarineClient, args: argparse.Namespace) -> SimarineObject:
+    raise NotImplementedError("Subclasses must implement getter()")
 
 
-def add_common_observe_args(parser: argparse.ArgumentParser):
-  parser.add_argument("--host")
-  parser.add_argument("--interval", type=float, default=1.0)
-  parser.add_argument("--once", action="store_true")
-  parser.add_argument("--fields", help="Comma-separated field names or paths (ex: ohms,state_field,fields.18)")
-  parser.add_argument("--json", action="store_true", help="Emit diffs as JSON")
-  parser.add_argument("--include-unchanged", action="store_true", help="Include unchanged fields in output")
-  parser.add_argument("--re-hints", action="store_true", help="Enable automatic RE hints for field behavior")
+class Device(Observe):
+  """Observe a device by ID"""
+
+  @classmethod
+  def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("device_id", type=int)
+
+  @classmethod
+  def getter(cls, client: SimarineClient, args: argparse.Namespace) -> SimarineObject:
+    return client.get_device(args.device_id)
 
 
-def add_observe_device_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
-  parser = subparsers.add_parser("device", help="Observe a device by ID")
-  parser.add_argument("device_id", type=int)
-  add_common_observe_args(parser)
-  parser.set_defaults(func=cmd_observe_device)
+class Sensor(Observe):
+  """Observe a sensor by ID"""
 
+  @classmethod
+  def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("sensor_id", type=int)
 
-def add_observe_sensor_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
-  parser = subparsers.add_parser("sensor", help="Observe a sensor by ID")
-  parser.add_argument("sensor_id", type=int)
-  add_common_observe_args(parser)
-  parser.set_defaults(func=cmd_observe_sensor)
+  @classmethod
+  def getter(cls, client: SimarineClient, args: argparse.Namespace) -> SimarineObject:
+    sensor = client.get_sensor(args.sensor_id)
+    client.update_sensors_state({sensor.id: sensor})
+    return sensor
 
 
 def _parse_field_filter(value: Optional[str]) -> Optional[set[str]]:
   if not value:
     return None
   return {v.strip() for v in value.split(",") if v.strip()}
-
-
-def cmd_observe_device(args: argparse.Namespace, stop_event: threading.Event):
-  field_filter = _parse_field_filter(args.fields)
-
-  with SimarineClient(args.host) as client:
-
-    def getter():
-      return client.get_device(args.device_id)
-
-    observer = ObjectObserver(
-      stop_event=stop_event,
-      getter=getter,
-      interval=args.interval,
-      field_filter=field_filter,
-      json_mode=args.json,
-      include_unchanged=args.include_unchanged,
-      re_hints=args.re_hints,
-    )
-
-    if args.once:
-      observer.sample()
-    else:
-      observer.run()
-
-
-def cmd_observe_sensor(args: argparse.Namespace, stop_event: threading.Event):
-  field_filter = _parse_field_filter(args.fields)
-
-  with SimarineClient(args.host) as client:
-
-    def getter():
-      sensor = client.get_sensor(args.sensor_id)
-      client.update_sensors_state({sensor.id: sensor})
-      return sensor
-
-    observer = ObjectObserver(
-      stop_event=stop_event,
-      getter=getter,
-      interval=args.interval,
-      field_filter=field_filter,
-      json_mode=args.json,
-      include_unchanged=args.include_unchanged,
-      re_hints=args.re_hints,
-    )
-
-    if args.once:
-      observer.sample()
-    else:
-      observer.run()
 
 
 # --------------------------------------------------
