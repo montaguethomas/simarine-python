@@ -24,6 +24,8 @@ class Pressure(Monitor):
   @classmethod
   def run(cls, args: argparse.Namespace, stop_event: threading.Event) -> None:
     with SimarineClient() as client:
+      sensor = client.get_sensor(args.sensor_id)
+      device = client.get_device(sensor.device_id)
 
       def handler(message: Message, addr: tuple[str, int]) -> None:
         if message.type != MessageType.ATMOSPHERIC_PRESSURE_HISTORY:
@@ -38,7 +40,7 @@ class Pressure(Monitor):
         history_field = message.fields[0]
         history_value = history_field.value[0]
         if args.convert:
-          history_value = history_value / 20
+          history_value = (history_value * 0.05) + (device.altitude * 0.125)
 
         delta = history_value - sensor_value
 
