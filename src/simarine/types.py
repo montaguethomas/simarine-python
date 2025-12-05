@@ -236,7 +236,7 @@ class BarometerDevice(Device):
   type_id = 5
 
   serial_number = SimarineField(4, "uint32")
-  altitude = SimarineField(5)  # 0 ft == 0; 5 ft == 12; 20 ft == 60
+  altitude = SimarineField(5, scale=0.1)  # meters
   time_interval = SimarineField(6, transform=BarometerTimeIntervalType)
   operation_mode = SimarineField(8, transform=OnOffType)
 
