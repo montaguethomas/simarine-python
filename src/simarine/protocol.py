@@ -224,12 +224,14 @@ class MessageType(IntEnum):
   Broadcasted atmospheric pressure history (timeseries).
 
   Sampled over 72 hrs, ordered newest -> oldest.
+  uint16_hi, uint16_lo values: station pressure reading 1/20th millibars
+  sample values are _not_ adjust for altitude: (sample * 0.05) + (altitude_m * 0.125)
 
   Received:
     0000000000 ff c1 84b3ee93 0477
     ff 00 0b 691c89f0 ff 691c89f0 -> field id (0), field type (0b -> 11), timestamp1 (uint32), marker, timestamp2 (uint32)
     ff e1 -> number of 32-bit blocks!
-    ff 560b560a -> int16_hi, int16_lo? millibars graph over time? max 72 hrs
+    ff 560b560a -> uint16_hi, uint16_lo values: station pressure reading 1/20th millibars
     ff 560f5611 ff 560e5609 ff 560b560f ff 5611561a ff 56195621 ff 5624562a ff 561e5612 ff 5619561f ff 5614560d
     ff 5611560c ff 5606560e ff 560b5616 ff 5613560b ff 560555fd ff 55f155ea ff 55db55d4 ff 55d155d4 ff 55ce55d2 ff 55b955a9
     ff 55a05591 ff 558a5581 ff 556a556c ff 5567556e ff 55695563 ff 555d5549 ff 55315525 ff 551e5516 ff 5512550c ff 55075504
