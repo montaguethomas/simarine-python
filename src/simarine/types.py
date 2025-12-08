@@ -82,6 +82,9 @@ class OnOffType(Enum):
 
 
 class SimarineObject:
+  fields: protocol.MessageFields = None
+  type_id: int = None
+
   def __init__(self, fields: protocol.MessageFields):
     self.fields = fields
 
@@ -89,7 +92,7 @@ class SimarineObject:
   def title(self) -> str:
     cls_name = self.__class__.__name__
     if cls_name == type(self).__mro__[-3].__name__:
-      return "Unknown"
+      return f"Unknown {cls_name} ({self.type_id})"
     return re.sub(r"([a-z])([A-Z])", r"\1 \2", cls_name.removesuffix(type(self).__mro__[-3].__name__))
 
   @property
@@ -160,6 +163,12 @@ class BarometerTimeIntervalType(UnknownEnum):
   HOURS_72 = 4
 
 
+class BatteryDisplayType(UnknownEnum):
+  STANDARD = 1
+  DETAILED = 2
+  VOLTAGE_ONLY = 3
+
+
 class BatteryType(UnknownEnum):
   WEB_LOW_MAINTENANCE = 1
   WET_MAINTENANCE_FREE = 2
@@ -169,20 +178,14 @@ class BatteryType(UnknownEnum):
   LIFEPO4 = 6
 
 
-class BatteryDisplayType(UnknownEnum):
-  STANDARD = 1
-  DETAILED = 2
-  VOLTAGE_ONLY = 3
+class InclinometerDisplayType(UnknownEnum):
+  LINE = 1
+  CARAVAN = 2
 
 
 class InclinometerType(UnknownEnum):
   PITCH = 1
   ROLL = 2
-
-
-class InclinometerDisplayType(UnknownEnum):
-  LINE = 1
-  CARAVAN = 2
 
 
 class TankFluidType(UnknownEnum):
@@ -198,7 +201,7 @@ class ThermometerType(UnknownEnum):
   VDO = 4
 
 
-class NullDevice(Device):
+class NoneDevice(Device):
   type_id = 0
 
 
@@ -221,7 +224,6 @@ class ThermometerDevice(Device):
 
   ntc_type_updated = SimarineFieldTimestamp(6)
   ntc_type = SimarineField(6, transform=ThermometerType)
-
   priority_updated = SimarineFieldTimestamp(9)
   priority = SimarineField(9)
 
@@ -301,8 +303,8 @@ class InclinometerDevice(Device):
   type_id = 13
 
   name_updated = SimarineFieldTimestamp(3)
-  name = SimarineField(3, transform=InclinometerType)
-  axis = SimarineField(3, transform=InclinometerType)
+  name = SimarineField(3, transform=lambda v: f"Inclinometer {InclinometerType(v).name.capitalize()}")
+  axis = SimarineField(3, transform=lambda v: InclinometerType(v).name.lower())
   nonlinear_updated = SimarineFieldTimestamp(6)
   nonlinear = SimarineField(6, transform=OnOffType)
   display_type_updated = SimarineFieldTimestamp(7)
@@ -332,7 +334,11 @@ class Sensor(SimarineObject):
 
   @property
   def state(self):
-    return getattr(self, self.unit) if self.unit is not None else None
+    if self.unit:
+      return getattr(self, self.unit)
+    if self.state_field:
+      return self.state_field.value
+    return None
 
   def to_dict(self):
     out = {
@@ -502,9 +508,9 @@ class StateOfChargeSensor(Sensor):
 
 
 # class Battery12Sensor(Sensor):
-#  type_id = 12
-#  unit = "unknown"
-#  unknown = SimarineState()  # 2147483647
+#   type_id = 12
+#   unit = "unknown"
+#   unknown = SimarineState()  # 2147483647
 
 
 class RemainingTimeSensor(Sensor):
@@ -522,3 +528,9 @@ class AngleSensor(Sensor):
 
 class UserSensor(Sensor):
   type_id = 22
+
+
+# class Battery31Sensor(Sensor):
+#   type_id = 31
+#   unit = "unknown"
+#   unknown = SimarineState()  # 2147483647

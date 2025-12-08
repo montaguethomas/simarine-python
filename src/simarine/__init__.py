@@ -25,7 +25,7 @@ from .protocol import MessageType, MessageFieldType, MessageFields
 from .transport import DEFAULT_TCP_PORT, DEFAULT_UDP_PORT, DEFAULT_MQTT_HOST, DEFAULT_MQTT_PORT
 from .types import (
   Device,
-  NullDevice,
+  NoneDevice,
   VoltmeterDevice,
   AmperemeterDevice,
   ThermometerDevice,
@@ -55,6 +55,8 @@ from .types import (
   TankFluidType,
   ThermometerType,
   TimestampStateType,
+  StateOfChargeSensor,
+  RemainingTimeSensor,
 )
 
 __all__: tuple[str, ...] = [
@@ -88,7 +90,7 @@ __all__: tuple[str, ...] = [
   "DEFAULT_MQTT_PORT",
   # types
   "Device",
-  "NullDevice",
+  "NoneDevice",
   "VoltmeterDevice",
   "AmperemeterDevice",
   "ThermometerDevice",
@@ -118,4 +120,6 @@ __all__: tuple[str, ...] = [
   "TankFluidType",
   "ThermometerType",
   "TimestampStateType",
+  "StateOfChargeSensor",
+  "RemainingTimeSensor",
 ]
