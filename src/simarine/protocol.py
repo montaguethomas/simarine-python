@@ -228,8 +228,9 @@ class MessageType(IntEnum):
   225 32-bit values -> 450 16-bit values.
   60(mins) * 72(hrs) / 450(samples) = 9.6min / sample
   450 / 3 = 150 samples == 24hrs
-  uint16_hi, uint16_lo values: station pressure reading 1/20th millibars
-  sample values are _not_ adjust for altitude: (sample * 0.05) + (altitude_m * 0.125)
+  uint16_hi, uint16_lo values: station pressure reading 1/20th millibars? this gets close mbars but not exactly matching.
+  sample values are _not_ adjust for altitude: (sample * 0.05) + (altitude_m * 0.125) ... this still doesn't match.
+  Plotted values of uint16_hi and uint16_lo match graphs from app.
 
   Received:
     0000000000 ff c1 84b3ee93 0477
