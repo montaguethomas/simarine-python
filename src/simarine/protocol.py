@@ -441,10 +441,16 @@ class MessageFields:
     1       : id(int32)
     2       : type(MessageFieldType)
     3..6    : value(int32) | timestamp(uint32)
-    7       : MARKER(ExtendedValueSection)
-    8..12   : value(int32)    <- if type==TIMESTAMPED_INT
-    8..N-1  : text(str(utf8)) <- if type==TIMESTAMPED_TEXT
-    N       : TEXT_END_MARKER <- if type==TIMESTAMPED_TEXT
+    7       : MARKER(ExtendedValueSection)      <- if type!=INT
+    8..11   : value(int32)                      <- if type==TIMESTAMPED_INT
+    8..N-1  : text(str(utf8))                   <- if type==TIMESTAMPED_TEXT
+    N       : TEXT_END_MARKER                   <- if type==TIMESTAMPED_TEXT
+    8..11   : timestamp(uint32)                 <- if type==TIMESERIES
+    12      : MARKER(TimeseriesSamplesSection)  <- if type==TIMESERIES
+    13      : count(int)                        <- if type==TIMESERIES
+    14..N   : 5-byte sample blocks              <- if type==TIMESERIES
+              MARKER + uint16_hi + uint16_lo
+    N       : MARKER(TimeseriesSamplesEnd)      <- if type==TIMESERIES
   """
 
   FIELD_MARKER_POS: ClassVar[int] = 0
@@ -548,7 +554,6 @@ class MessageFields:
           raise ValueError("Unterminated text field")
         return i + 1 - self._offset  # Add the text end marker byte
       case MessageFieldType.TIMESERIES:
-        # ff 00 0b 69319d40 ff 69319d40 ff e1 ff 546a 5464 ff 5461 5453 ... ff 5849 5846 ff ff <checksum>
         count = self._data[self.TIMESERIES_COUNT_POS]
         marker_pos = self.TIMESERIES_VALUE_POS + (count * self.TIMESERIES_VALUE_SIZE)
         if self._data[self._offset + marker_pos] != Message.MARKER_BYTE:

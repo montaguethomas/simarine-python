@@ -167,6 +167,7 @@ This implementation models it as an enum (`MessageFieldType`), with values that 
 - Integer (`0x01`)
 - Timestamped Integer (`0x03`)
 - Timestamped Text (`0x04`)
+- Timeseries (`0x0B`)
 
 Because this is a reverse‑engineered protocol and new field types may exist, this document intentionally stays at the
 "opaque code" level:
@@ -205,6 +206,20 @@ For **Timestamped Text** typed fields, the data has a variable length with a str
 | `4`      | Marker (`0xFF`)                                         |
 | `5..N-1` | utf-8 encoded string bytes                              |
 | `N`      | Null byte (`0x00`)                                      |
+
+#### 3.4.4 Timeseries
+
+For **Timeseries** typed fields, the data has a variable length with a structure of:
+
+| Offset    | Description                                             |
+| --------- | ------------------------------------------------------- |
+| `0..3`    | 32-bit unsigned integer (4-bytes); unix timestamp value |
+| `4`       | Marker (`0xFF`)                                         |
+| `5..8`    | 32-bit unsigned integer (4-bytes); unix timestamp value |
+| `9`       | Marker (`0xFF`)                                         |
+| `10`      | Number of 5-byte sample blocks                          |
+| `11..N-1` | 5-byte sample blocks (`0xFF` + uint16_hi + uint16_lo)   |
+| `N`       | Marker (`0xFF`)                                         |
 
 ---
 
