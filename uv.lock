@@ -640,7 +640,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "setuptools-scm", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev", "cli"]
+provides-extras = ["cli", "dev"]
 
 [[package]]
 name = "six"
