@@ -303,16 +303,12 @@ class InclinometerDevice(Device):
   name_updated = SimarineFieldTimestamp(3)
   name = SimarineField(3, transform=InclinometerType)
   axis = SimarineField(3, transform=InclinometerType)
-
   nonlinear_updated = SimarineFieldTimestamp(6)
   nonlinear = SimarineField(6, transform=OnOffType)
-
   display_type_updated = SimarineFieldTimestamp(7)
   display_type = SimarineField(7, transform=InclinometerDisplayType)
-
   reverse_updated = SimarineFieldTimestamp(9)
   reverse = SimarineField(9, transform=OnOffType)
-
   display_updated = SimarineFieldTimestamp(10)
   display = SimarineField(10, transform=OnOffType)
 
