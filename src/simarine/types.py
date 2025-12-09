@@ -3,7 +3,7 @@ Simarine Types
 """
 
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Callable, Dict, Any, Type
 
@@ -255,7 +255,7 @@ class TimeDevice(Device):
   type_id = 7
 
   name = SimarineField(3, "uint32")  # system serial number
-  timezone = SimarineField(4, scale=0.000277777777777)  # Timezone offset, originally stored in seconds; convert to hours
+  timezone = SimarineField(4, transform=lambda v: timezone(timedelta(seconds=v)))
 
 
 class TankDevice(Device):
@@ -386,7 +386,7 @@ class SensorFactory:
 
 
 class TimestampStateType(UnknownEnum):
-  LOCALTIME = 0
+  LOCAL = 0
   """System time, timezone adjusted. This is what's displayed."""
 
   UTC = 1
@@ -397,7 +397,7 @@ class TimestampStateType(UnknownEnum):
   Pico Firmware v1.21
   """
 
-  BOOT_TIME = 2
+  BOOT = 2
   """Boot time, timezone adjusted."""
 
 
@@ -454,6 +454,10 @@ class TimestampSensor(Sensor):
 
   datetime = SimarineState(transform=datetime.fromtimestamp)
   unix_timestamp = SimarineState()
+
+  @property
+  def title(self) -> str:
+    return f"{self.state_type.name.capitalize()} {super().title()}"
 
 
 class StateOfChargeSensor(Sensor):
