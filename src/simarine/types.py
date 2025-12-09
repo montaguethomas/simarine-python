@@ -449,11 +449,11 @@ class ResistanceSensor(Sensor):
 
 class TimestampSensor(Sensor):
   type_id = 10
-  unit = "unix_timestamp"
+  unit = "datetime"
   state_type = SimarineField(4, transform=TimestampStateType)
 
-  unix_timestamp = SimarineState()
   datetime = SimarineState(transform=datetime.fromtimestamp)
+  unix_timestamp = SimarineState()
 
 
 class StateOfChargeSensor(Sensor):
