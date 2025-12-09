@@ -457,7 +457,7 @@ class TimestampSensor(Sensor):
 
   @property
   def title(self) -> str:
-    return f"{self.state_type.name.capitalize()} {super().title()}"
+    return f"{self.state_type.name.capitalize()} {super().title}"
 
 
 class StateOfChargeSensor(Sensor):
